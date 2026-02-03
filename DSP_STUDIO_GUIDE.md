@@ -1,7 +1,9 @@
 
-====================================================================
-Designed by Mehdi sehati shal | version v1.0.0 | date : 2026-02-03
-====================================================================
+========
+Designed by Mehdi sehati shal 
+| version v1.0.0 
+| date : 2026-02-03
+========
 
 # Advanced DSP Studio Pro - Documentation
 
@@ -95,3 +97,4 @@ The studio is powered by Python 3.10+ and requires the following industrial-scie
 *   `numpy`, `scipy`, `matplotlib`, `customtkinter`
 
 **Easy Launch:** Double-click `run_studio.bat`. It will automatically verify your environment, install any missing libraries, and launch the application.
+
