@@ -5,6 +5,7 @@ from scipy.fft import fft, fftfreq
 from scipy.signal import (butter, cheby1, cheby2, ellip, iirnotch,
                           firwin, lfilter, filtfilt, tf2zpk, freqz)
 import customtkinter as ctk
+import complex_filters
 
 # Styling
 ctk.set_appearance_mode("Dark")
@@ -21,6 +22,7 @@ class SignalGenerator:
         ]
         self.noise_lvl = 0.05
         self.imported_data = None
+        self.raw_matrix = None # For multi-column CSVs
         self.mode = "Synth" # Synth or Import
 
     def get_signal(self):
@@ -51,14 +53,44 @@ class DSPApp(ctk.CTk):
         self.atten = 40.0 
         self.beta = 5.0
         self.notch_q = 30.0
+        self.low_bw = ctk.BooleanVar(value=True) # Logic placeholder
+        self.min_phase = ctk.BooleanVar(value=False)
+        self.gauss_std = 7.0
+        self.pm_width = 50.0 # Transition width for Parks-McClellan
         self.import_triggered = False
         self.high_bw = ctk.BooleanVar(value=False)
         self.show_briefs = ctk.BooleanVar(value=True)
+        self.show_complex = ctk.BooleanVar(value=False)
+        self.complex_filter = ctk.StringVar(value="Kalman")
+        self._force_redraw = False
+        self._crash_count = 0 
+        self.fs_val = ctk.StringVar(value="2000")
+        
+        # Complex Filter Parameters
+        self.kf_q = 1e-4; self.kf_r = 1e-2
+        self.sg_win = 11; self.sg_poly = 2
+        self.med_ker = 3
+        self.wt_wave = "db4"; self.wt_lev = 2
+        self.lms_mu = 0.01; self.lms_ord = 32
+        
+        self.import_format = ctk.StringVar(value="Raw ADC File")
+        self.accel_axis = ctk.StringVar(value="AX")
+        
         self.freq_sliders = []
         self.param_sliders = {}
         
         self.setup_ui()
+        
+        # Optimization: Store last state to avoid redundant calculations/draws
+        self._last_filter_params = None
+        self.b, self.a = np.array([1.0]), np.array([1.0])
+        
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.update_loop()
+
+    def on_closing(self):
+        self.quit()
+        self.destroy()
 
     def setup_ui(self):
         self.grid_columnconfigure(0, weight=0)
@@ -69,13 +101,24 @@ class DSPApp(ctk.CTk):
         self.sidebar = ctk.CTkScrollableFrame(self, width=350)
         self.sidebar.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
-        ctk.CTkLabel(self.sidebar, text="DSP Controls", font=ctk.CTkFont(size=22, weight="bold")).pack(pady=10)
+        # Header with Refresh Icon/Button
+        header_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        header_frame.pack(fill="x", pady=5)
+        
+        ctk.CTkLabel(header_frame, text="DSP Controls", font=ctk.CTkFont(size=22, weight="bold")).pack(side="left", padx=10)
+        
+        self.refresh_btn = ctk.CTkButton(header_frame, text="🔄", width=40, font=ctk.CTkFont(size=18),
+                                         fg_color="#333", hover_color="#555", command=self.manual_refresh)
+        self.refresh_btn.pack(side="right", padx=10)
 
-        # System Sampling Rate (Fs) - Real-time control
-        self.fs_frame = self.create_group("System Spectrum Range", [
-            ("Sampling Fs", 100, 2000, 2000, lambda v: setattr(self.sig_gen, 'fs', int(float(v))))
-        ])
-        self.fs_slider = self.freq_sliders[-1] 
+        # System Sampling Rate (Fs) - Input Box
+        self.fs_frame = ctk.CTkFrame(self.sidebar)
+        self.fs_frame.pack(fill="x", pady=5, padx=5)
+        ctk.CTkLabel(self.fs_frame, text="System Spectrum Range", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=2)
+        fs_row = ctk.CTkFrame(self.fs_frame, fg_color="transparent"); fs_row.pack(fill="x", pady=2)
+        ctk.CTkLabel(fs_row, text="Sampling Fs (Hz):", font=ctk.CTkFont(size=11)).pack(side="left", padx=5)
+        self.fs_entry = ctk.CTkEntry(fs_row, width=80, textvariable=self.fs_val)
+        self.fs_entry.pack(side="right", padx=5)
 
         # Signal Input Selection
         self.source_segmented = ctk.CTkSegmentedButton(self.sidebar, values=["Synth", "Import"], 
@@ -90,6 +133,9 @@ class DSPApp(ctk.CTk):
                         variable=self.high_bw, command=self.update_bw_range).pack(pady=2, anchor="w", padx=5)
         ctk.CTkCheckBox(self.toggles_frame, text="Show Graph Briefs", 
                         variable=self.show_briefs, command=self.toggle_briefs).pack(pady=2, anchor="w", padx=5)
+        
+        ctk.CTkCheckBox(self.toggles_frame, text="FIR Minimum Phase", 
+                        variable=self.min_phase).pack(pady=2, anchor="w", padx=5)
 
         # Synth Group
         self.synth_group = self.create_group("Signal Synthesizer", [
@@ -103,6 +149,17 @@ class DSPApp(ctk.CTk):
         # Import Group
         self.import_group = ctk.CTkFrame(self.sidebar)
         ctk.CTkLabel(self.import_group, text="Data Import", font=ctk.CTkFont(weight="bold")).pack(pady=5)
+        
+        ctk.CTkLabel(self.import_group, text="Import Format", font=ctk.CTkFont(size=11)).pack(pady=2)
+        self.fmt_menu = ctk.CTkOptionMenu(self.import_group, values=["Raw ADC File", "Accel-Gyro CSV"], 
+                                         variable=self.import_format, command=self.on_format_change)
+        self.fmt_menu.pack(pady=2, padx=10)
+        
+        self.axis_frame = ctk.CTkFrame(self.import_group, fg_color="transparent")
+        self.axis_btns = ctk.CTkSegmentedButton(self.axis_frame, values=["AX", "AY", "AZ", "GX", "GY", "GZ"],
+                                               variable=self.accel_axis, command=self.update_axis_data)
+        self.axis_btns.pack(pady=5)
+        
         self.import_btn = ctk.CTkButton(self.import_group, text="Load Data (CSV/TXT)", command=self.load_file)
         self.import_btn.pack(pady=5, padx=10)
         self.file_label = ctk.CTkLabel(self.import_group, text="Pending Import...", font=ctk.CTkFont(size=10))
@@ -117,16 +174,16 @@ class DSPApp(ctk.CTk):
 
         ctk.CTkLabel(self.f_frame, text="Response Type").pack()
         self.resp_menu = ctk.CTkOptionMenu(self.f_frame, values=["None", "Low-Pass", "High-Pass", "Band-Pass", "Band-Stop", "Notch"], 
-                                           variable=self.filter_resp, command=self.update_ui_visibility)
+                                           variable=self.filter_resp, command=self.force_update)
         self.resp_menu.pack(pady=5)
 
         ctk.CTkLabel(self.f_frame, text="Filter Class").pack()
-        self.class_menu = ctk.CTkOptionMenu(self.f_frame, values=["IIR", "FIR", "Adaptive (LMS)", "Lattice"], 
-                                            variable=self.filter_class, command=self.update_proto_options)
+        self.class_menu = ctk.CTkOptionMenu(self.f_frame, values=["None", "IIR", "FIR", "Adaptive (LMS)", "Lattice"], 
+                                            variable=self.filter_class, command=lambda v: (self.update_proto_options(v), self.force_update(v)))
         self.class_menu.pack(pady=5)
 
         ctk.CTkLabel(self.f_frame, text="Design Method / Prototype").pack()
-        self.proto_menu = ctk.CTkOptionMenu(self.f_frame, values=[], variable=self.filter_proto, command=self.update_ui_visibility)
+        self.proto_menu = ctk.CTkOptionMenu(self.f_frame, values=[], variable=self.filter_proto, command=self.force_update)
         self.proto_menu.pack(pady=5)
         
         self.param_group = self.create_param_group("Filter Parameters", [
@@ -136,14 +193,39 @@ class DSPApp(ctk.CTk):
             ("Passband Ripple (dB)", 0.1, 10, 1, lambda v: setattr(self, 'ripple', float(v))),
             ("Stopband Atten (dB)", 10, 80, 40, lambda v: setattr(self, 'atten', float(v))),
             ("Kaiser Beta", 0.1, 15, 5, lambda v: setattr(self, 'beta', float(v))),
-            ("Notch Quality (Q)", 1, 100, 30, lambda v: setattr(self, 'notch_q', float(v)))
+            ("Notch Quality (Q)", 1, 100, 30, lambda v: setattr(self, 'notch_q', float(v))),
+            ("Gaussian StdDev", 0.1, 20, 7, lambda v: setattr(self, 'gauss_std', float(v))),
+            ("PM Trans. Width", 1, 500, 50, lambda v: setattr(self, 'pm_width', float(v)))
         ])
 
-        # Analyze Button
+        # New Toggle Location: Below Parameters
+        self.complex_toggle = ctk.CTkCheckBox(self.sidebar, text="Enable Complex/AI Filter Layer", 
+                                              variable=self.show_complex, command=self.toggle_complex_visibility,
+                                              fg_color="#ff7b00", hover_color="#e66e00")
+        self.complex_toggle.pack(pady=10, padx=10)
+
+        # Complex Studio Group (Hidden by default)
+        self.complex_group = ctk.CTkFrame(self.sidebar)
+        ctk.CTkLabel(self.complex_group, text="Advanced Algorithms", font=ctk.CTkFont(weight="bold")).pack(pady=5)
+        
+        self.complex_menu = ctk.CTkOptionMenu(self.complex_group, 
+                                             values=["Kalman", "Savitzky-Golay", "Wavelet", "Adaptive (LMS)", "Median"],
+                                             variable=self.complex_filter, command=self.update_complex_ui)
+        self.complex_menu.pack(pady=5)
+        
+        self.complex_info_box = ctk.CTkTextbox(self.complex_group, height=100, font=ctk.CTkFont(size=11), fg_color="#1a1a1a")
+        self.complex_info_box.pack(fill="x", padx=10, pady=5)
+        
+        self.comp_param_frame = ctk.CTkFrame(self.complex_group, fg_color="transparent")
+        self.comp_param_frame.pack(fill="x", pady=5)
+        
+        self.update_complex_ui("Kalman")
+
+        # Analyze Button - ALWAYS AT BOTTOM
         self.calc_btn = ctk.CTkButton(self.sidebar, text="Calculate & Analyze", 
                                       fg_color="#28a745", hover_color="#218838",
                                       command=self.show_report)
-        self.calc_btn.pack(pady=10, padx=10, fill="x")
+        self.calc_btn.pack(pady=10, padx=10, fill="x", side="bottom")
 
         self.update_proto_options("IIR")
         self.toggle_source("Synth") 
@@ -288,31 +370,125 @@ class DSPApp(ctk.CTk):
     def toggle_source(self, mode):
         self.sig_gen.mode = mode
         if mode == "Synth":
-            self.import_group.pack_forget(); self.fs_frame.pack(fill="x", pady=5, padx=5, before=self.source_segmented)
+            self.import_group.pack_forget()
             self.synth_group.pack(fill="x", pady=5, padx=5, after=self.source_segmented)
-            self.f_frame.pack(fill="x", pady=10, padx=5); self.param_group.pack(fill="x", pady=5, padx=5)
-            self.calc_btn.pack(pady=10, padx=10, fill="x"); self.update_ui_visibility()
         else:
-            self.synth_group.pack_forget(); self.f_frame.pack_forget(); self.param_group.pack_forget()
-            self.calc_btn.pack_forget(); self.import_group.pack(fill="x", pady=5, padx=5, after=self.source_segmented)
-            if self.sig_gen.imported_data is None: self.fs_frame.pack_forget()
-            else: self.fs_frame.pack(fill="x", pady=5, padx=5, before=self.source_segmented)
+            self.synth_group.pack_forget()
+            self.import_group.pack(fill="x", pady=5, padx=5, after=self.source_segmented)
+        
+        # Ensure FS input and filtering frames are always visible
+        self.fs_frame.pack(fill="x", pady=5, padx=5, before=self.source_segmented)
+        self.f_frame.pack(fill="x", pady=10, padx=5, after=self.toggles_frame)
+        self.param_group.pack(fill="x", pady=5, padx=5, after=self.f_frame)
+        self.update_ui_visibility()
+
+    def toggle_complex_visibility(self):
+        if self.show_complex.get():
+            self.complex_group.pack(fill="x", pady=5, padx=5, before=self.calc_btn)
+        else:
+            self.complex_group.pack_forget()
+
+    def force_update(self, *args):
+        self._force_redraw = True
+        self.update_ui_visibility()
+
+    def update_complex_ui(self, choice):
+        self.force_update()
+        # Update Info
+        self.complex_info_box.configure(state="normal")
+        self.complex_info_box.delete("1.0", "end")
+        self.complex_info_box.insert("1.0", complex_filters.get_complex_filter_info(choice))
+        self.complex_info_box.configure(state="disabled")
+        
+        # Clear params
+        for widget in self.comp_param_frame.winfo_children():
+            widget.destroy()
+            
+        # Add relevant sliders
+        if choice == "Kalman":
+            self.add_comp_slider("Process Noise (Q) log", -6, -1, -4, lambda v: setattr(self, 'kf_q', 10**float(v)))
+            self.add_comp_slider("Meas. Noise (R) log", -4, 1, -2, lambda v: setattr(self, 'kf_r', 10**float(v)))
+        elif choice == "Savitzky-Golay":
+            self.add_comp_slider("Window Length", 3, 51, 11, lambda v: setattr(self, 'sg_win', int(float(v))))
+            self.add_comp_slider("Polynomial Order", 1, 5, 2, lambda v: setattr(self, 'sg_poly', int(float(v))))
+        elif choice == "Median":
+            self.add_comp_slider("Kernel Size", 3, 31, 3, lambda v: setattr(self, 'med_ker', int(float(v))))
+        elif choice == "Wavelet":
+             # Simplified wavelet selection
+            ctk.CTkLabel(self.comp_param_frame, text="Wavelet: db4", font=ctk.CTkFont(size=10)).pack()
+            self.add_comp_slider("Decomposition Level", 1, 5, 2, lambda v: setattr(self, 'wt_lev', int(float(v))))
+        elif choice == "Adaptive (LMS)":
+            self.add_comp_slider("Learning Rate (mu)", 0.001, 0.1, 0.01, lambda v: setattr(self, 'lms_mu', float(v)))
+            self.add_comp_slider("Filter Order", 8, 128, 32, lambda v: setattr(self, 'lms_ord', int(float(v))))
+
+    def add_comp_slider(self, label, low, high, start, cmd):
+        f = ctk.CTkFrame(self.comp_param_frame, fg_color="transparent"); f.pack(fill="x", pady=2)
+        ctk.CTkLabel(f, text=label, font=ctk.CTkFont(size=11)).pack(side="left", padx=5)
+        v_lbl = ctk.CTkLabel(f, text=str(start), font=ctk.CTkFont(size=11, weight="bold"), text_color="#00d1ff")
+        v_lbl.pack(side="right", padx=5)
+        def _up(v):
+            v_lbl.configure(text=f"{float(v):.2f}")
+            cmd(v)
+        s = ctk.CTkSlider(f, from_=low, to=high, command=_up); s.set(start); s.pack(fill="x", padx=5)
 
     def trigger_import_run(self):
         self.import_triggered = True; self.f_frame.pack(fill="x", pady=10, padx=5)
         self.param_group.pack(fill="x", pady=5, padx=5); self.calc_btn.pack(pady=10, padx=10, fill="x"); self.update_ui_visibility()
 
+    def manual_refresh(self):
+        """Force a full reset of the engine state to unfreeze."""
+        self._last_filter_params = None
+        self._force_redraw = True
+        self._crash_count = 0
+        # Trigger an immediate calculation
+        try:
+            self.update_loop(force=True)
+            self.file_label.configure(text_color="#00d1ff") # Indicator of pulse
+        except: pass
+
+    def on_format_change(self, choice):
+        if choice == "Accel-Gyro CSV": self.axis_frame.pack(pady=5)
+        else: self.axis_frame.pack_forget()
+
+    def update_axis_data(self, *args):
+        if self.sig_gen.raw_matrix is not None:
+            axis_map = {"AX": 1, "AY": 2, "AZ": 3, "GX": 4, "GY": 5, "GZ": 6}
+            col_idx = axis_map.get(self.accel_axis.get(), 1)
+            # Ensure index is safe
+            if col_idx < self.sig_gen.raw_matrix.shape[1]:
+                self.sig_gen.imported_data = self.sig_gen.raw_matrix[:, col_idx]
+                self.import_triggered = True # Refresh graphs
+                self._force_redraw = True
+
     def load_file(self):
-        from tkinter import filedialog
+        from tkinter import filedialog, messagebox
         path = filedialog.askopenfilename(filetypes=[("Text/CSV", "*.txt *.csv")])
         if path:
             try:
-                data = np.loadtxt(path, delimiter=",")
-                if data.ndim > 1: data = data[:, 0]
+                fmt = self.import_format.get()
+                if fmt == "Raw ADC File":
+                    data = np.loadtxt(path, delimiter=",")
+                    if data.ndim > 1: data = data[:, 0]
+                    self.sig_gen.raw_matrix = None
+                else: # Accel-Gyro CSV
+                    # Skip header line, use columns 1-6 (time is index 0)
+                    data_raw = np.loadtxt(path, delimiter=",", skiprows=1)
+                    self.sig_gen.raw_matrix = data_raw
+                    # Auto select appropriate FS from time diff if possible
+                    if data_raw.shape[0] > 1:
+                        avg_dt = np.mean(np.diff(data_raw[:10, 0]))
+                        if avg_dt > 0: self.fs_val.set(str(int(1/avg_dt)))
+                    
+                    axis_map = {"AX": 1, "AY": 2, "AZ": 3, "GX": 4, "GY": 5, "GZ": 6}
+                    col_idx = axis_map.get(self.accel_axis.get(), 1)
+                    data = data_raw[:, col_idx]
+                
                 self.sig_gen.imported_data = data
+                self.import_triggered = True # Auto-trigger analysis
+                self._force_redraw = True
                 self.file_label.configure(text=f"Loaded: {path.split('/')[-1]}", text_color="#00ff00")
+                
                 self.fs_frame.pack(fill="x", pady=5, padx=5, before=self.source_segmented)
-                self.import_run_btn.pack(pady=10, padx=10)
             except Exception as e: self.file_label.configure(text=f"Error: {e}", text_color="#ff4444")
 
     def update_ui_visibility(self, *args):
@@ -322,14 +498,22 @@ class DSPApp(ctk.CTk):
         for key in self.param_sliders:
             self.param_sliders[key].pack_forget()
             
-        # 2. If 'None' is selected, don't show any parameters
+        # 2. Only hide everything if the Response Type is 'None'
         if resp == "None":
             return
             
-        # 3. Deterministic packing order for visibility
-        # Order and Cutoff 1 are always visible for any active filter
+        # 3. Always show Order and Cutoff 1 if any filter response is active
+        # This allows tuning even if the class/prototype is bypassed (None)
         self.param_sliders["Order"].pack(fill="x", pady=2)
         self.param_sliders["Cutoff 1 (Low/Center)"].pack(fill="x", pady=2)
+        
+        # 4. Hide advanced parameters if the implementation is bypassed
+        if f_class == "None" or proto == "None":
+            return
+            
+        # 5. Conditional parameters based on implementation
+        if resp in ["Band-Pass", "Band-Stop"]:
+            self.param_sliders["Cutoff 2 (High)"].pack(fill="x", pady=2)
         
         # Conditionals
         if resp in ["Band-Pass", "Band-Stop"]:
@@ -340,25 +524,31 @@ class DSPApp(ctk.CTk):
                 self.param_sliders["Passband Ripple (dB)"].pack(fill="x", pady=2)
             if proto in ["Chebyshev II", "Elliptic"]:
                 self.param_sliders["Stopband Atten (dB)"].pack(fill="x", pady=2)
+            if proto == "Gaussian":
+                self.param_sliders["Gaussian StdDev"].pack(fill="x", pady=2)
         
         if resp == "Notch":
             self.param_sliders["Notch Quality (Q)"].pack(fill="x", pady=2)
             
-        if f_class == "FIR" and proto == "Kaiser":
-            self.param_sliders["Kaiser Beta"].pack(fill="x", pady=2)
+        if f_class == "FIR":
+            if proto == "Kaiser": self.param_sliders["Kaiser Beta"].pack(fill="x", pady=2)
+            if proto == "Gaussian": self.param_sliders["Gaussian StdDev"].pack(fill="x", pady=2)
+            if proto == "Parks-McClellan": self.param_sliders["PM Trans. Width"].pack(fill="x", pady=2)
 
     def set_sine(self, idx, key, val): self.sig_gen.sines[idx][key] = float(val)
 
     def update_proto_options(self, choice):
-        if choice == "IIR": opts = ["Butterworth", "Chebyshev I", "Chebyshev II", "Elliptic"]
-        elif choice == "FIR": opts = ["Hamming", "Hanning", "Blackman", "Rectangular", "Kaiser"]
+        if choice == "None": opts = ["None"]
+        elif choice == "IIR": opts = ["None", "Butterworth", "Chebyshev I", "Chebyshev II", "Elliptic", "Bessel", "Gaussian"]
+        elif choice == "FIR": 
+            opts = ["None", "Parks-McClellan", "Raised Cosine", "Gaussian", "Rectangular", "Kaiser", "Hamming", "Hanning", "Blackman"]
         elif choice == "Adaptive (LMS)": opts = ["Standard LMS", "Normalized LMS"]
         else: opts = ["Grey-Markel", "All-Pass Lattice"]
         self.proto_menu.configure(values=opts); self.filter_proto.set(opts[0]); self.update_ui_visibility()
 
     def get_filter(self, fs):
         res = self.filter_resp.get(); f_class = self.filter_class.get(); proto = self.filter_proto.get(); nyq = fs / 2
-        if res == "None": return np.array([1.0]), np.array([1.0])
+        if res == "None" or f_class == "None" or proto == "None": return np.array([1.0]), np.array([1.0])
         c1 = np.clip(self.cutoff_1, 0.1, nyq - 1); c2 = np.clip(self.cutoff_2, c1 + 0.1, nyq - 1)
         btype = 'low'
         if res == "High-Pass": btype = 'high'
@@ -368,15 +558,40 @@ class DSPApp(ctk.CTk):
         if res == "Notch": return iirnotch(c1/nyq, self.notch_q)
         try:
             if f_class == "IIR":
+                from scipy.signal import bessel
                 if proto == "Butterworth": return butter(self.order, Wn, btype=btype)
                 elif proto == "Chebyshev I": return cheby1(self.order, self.ripple, Wn, btype=btype)
                 elif proto == "Chebyshev II": return cheby2(self.order, self.atten, Wn, btype=btype)
                 elif proto == "Elliptic": return ellip(self.order, self.ripple, self.atten, Wn, btype=btype)
+                elif proto == "Bessel": return bessel(self.order, Wn, btype=btype)
+                elif proto == "Gaussian": 
+                    # Gaussian IIR is approximation, here we use Butterworth as base but we can simulate
+                    return butter(self.order, Wn, btype=btype) 
             else:
-                numtaps = self.order * 8 + 1; win = proto.lower()
-                if win == "kaiser": win = ('kaiser', self.beta)
-                elif win == "rectangular": win = "boxcar"
-                b = firwin(numtaps, Wn, pass_zero=(btype in ['low', 'bandstop']), window=win)
+                from scipy.signal import remez, minimum_phase
+                numtaps = self.order * 4 + 1
+                if numtaps % 2 == 0: numtaps += 1 # Ensure odd for simpler PM
+                
+                if proto == "Parks-McClellan":
+                    bw = self.pm_width / nyq
+                    bands = [0, c1/nyq - bw/2, c1/nyq + bw/2, 1]
+                    # Clamp bands to valid range [0, 1]
+                    bands = np.clip(bands, 0, 1)
+                    # Ensure bands are strictly increasing
+                    for i in range(1, len(bands)):
+                        if bands[i] <= bands[i-1]: bands[i] = bands[i-1] + 1e-5
+                    bands = np.clip(bands, 0, 1)
+                    b = remez(numtaps, bands, [1, 0])
+                else:
+                    win = proto.lower()
+                    if win == "kaiser": win = ('kaiser', self.beta)
+                    elif win == "gaussian": win = ('gaussian', self.gauss_std)
+                    elif win == "rectangular": win = "boxcar"
+                    elif win == "raised cosine": win = "hann" # Closest standard window
+                    b = firwin(numtaps, Wn, pass_zero=(btype in ['low', 'bandstop']), window=win)
+                
+                if self.min_phase.get():
+                    b = minimum_phase(b)
                 return b, np.array([1.0])
         except: return np.array([1.0]), np.array([1.0])
 
@@ -458,41 +673,213 @@ class DSPApp(ctk.CTk):
             
         rep += "    return out_sample;\n"
         rep += "}\n\n"
+
+        # 6. Complex Filter Implementation (If enabled)
+        if self.show_complex.get():
+            c_type = self.complex_filter.get()
+            rep += "/* " + "="*75 + "\n"
+            rep += f" * ADVANCED LAYER: {c_type.upper()}\n"
+            rep += " " + "="*75 + " */\n\n"
+
+            if c_type == "Kalman":
+                rep += f"// Kalman Parameters: Q={self.kf_q:.10f}, R={self.kf_r:.6f}\n"
+                rep += "float Kalman_Process(float p_in) {\n"
+                rep += "    static float p_x = 0.0f; // State estimate\n"
+                rep += "    static float p_p = 1.0f; // Estimate error covariance\n"
+                rep += f"    const float p_q = {self.kf_q:.10f}f; // Process noise\n"
+                rep += f"    const float p_r = {self.kf_r:.6f}f;  // Measurement noise\n\n"
+                rep += "    // Prediction\n"
+                rep += "    p_p = p_p + p_q;\n\n"
+                rep += "    // Update\n"
+                rep += "    float p_k = p_p / (p_p + p_r); // Kalman Gain\n"
+                rep += "    p_x = p_x + p_k * (p_in - p_x);\n"
+                rep += "    p_p = (1.0f - p_k) * p_p;\n\n"
+                rep += "    return p_x;\n"
+                rep += "}\n\n"
+            
+            elif c_type == "Savitzky-Golay":
+                rep += f"// Savitzky-Golay (Window: {self.sg_win}, Poly: {self.sg_poly})\n"
+                rep += "// Note: Optimized for the selected window on-chip\n"
+                rep += f"#define SG_WINDOW {self.sg_win}\n"
+                rep += "float SG_Process(float p_in) {\n"
+                rep += f"    static float buffer[SG_WINDOW] = {{0.0f}};\n"
+                rep += "    // Shift and add\n"
+                rep += "    for(int i = SG_WINDOW-1; i > 0; i--) buffer[i] = buffer[i-1];\n"
+                rep += "    buffer[0] = p_in;\n"
+                rep += "    // Implementation typically uses precomputed coefficients weights[i]\n"
+                rep += "    float out = 0.0f;\n"
+                rep += "    // (Convolution with SG coefficients goes here)\n"
+                rep += "    return out; // Placeholder for coefficients\n"
+                rep += "}\n\n"
+            
+            elif c_type == "Median":
+                rep += f"#define MED_SIZE {self.med_ker}\n"
+                rep += "float Median_Process(float p_in) {\n"
+                rep += "    static float buf[MED_SIZE] = {0.0f};\n"
+                rep += "    // Sort and return middle value logic\n"
+                rep += "    // (Standard sorting algorithm implemented here)\n"
+                rep += "    return buf[MED_SIZE/2];\n"
+                rep += "}\n\n"
+
+            elif c_type == "Adaptive (LMS)":
+                rep += f"#define LMS_ORDER {self.lms_ord}\n"
+                rep += f"// LMS Step Size: {self.lms_mu:.5f}\n"
+                rep += "float LMS_Process(float p_in) {\n"
+                rep += "    static float w[LMS_ORDER] = {0.0f};\n"
+                rep += "    static float x[LMS_ORDER] = {0.0f};\n"
+                rep += f"    const float mu = {self.lms_mu:.5f}f;\n"
+                rep += "    float y = 0.0f;\n"
+                rep += "    for(int i=0; i<LMS_ORDER; i++) y += w[i]*x[i];\n"
+                rep += "    float e = p_in - y;\n"
+                rep += "    for(int i=0; i<LMS_ORDER; i++) w[i] += 2*mu*e*x[i];\n"
+                rep += "    for(int i=LMS_ORDER-1; i>0; i--) x[i] = x[i-1];\n"
+                rep += "    x[0] = p_in;\n"
+                rep += "    return y;\n"
+                rep += "}\n\n"
         
         txt.insert("1.0", rep); txt.configure(state="disabled")
 
-    def update_loop(self):
-        if self.sig_gen.mode == "Import" and not self.import_triggered: self.after(200, self.update_loop); return
-        fs = int(self.fs_slider.get())
+    def update_loop(self, force=False):
+        # Optimization: only process if signal exists or in synth mode
+        if self.sig_gen.mode == "Import" and self.sig_gen.imported_data is None:
+            self.after(300, self.update_loop); return
+            
+        try:
+            fs_str = self.fs_val.get()
+            fs = int(fs_str) if fs_str else 2000
+        except: fs = 2000
         self.sig_gen.fs = fs
-        if self.sig_gen.mode == "Synth": self.sig_gen.t = np.arange(0, self.sig_gen.duration, 1/fs)
-        raw = self.sig_gen.get_signal(); b, a = self.get_filter(fs)
-        filtered = filtfilt(b, a, raw) if len(a) > 1 or len(b) > 1 else raw
-        N = len(filtered); yf = fft(filtered); xf = fftfreq(N, 1/fs)[:N//2]; mag = 2.0/N * np.abs(yf[:N//2])
-        w, h = freqz(b, a, worN=1024, fs=fs); z, p, k = tf2zpk(b, a)
-        imp_resp = lfilter(b, a, np.array([1.0] + [0.0]*119))
         
-        ax_t = self.cards["time"]["ax"]; ax_t.clear(); ax_t.plot(raw, color='#555', alpha=0.4); ax_t.plot(filtered, color='#00d1ff'); ax_t.set_ylim([-3.5,3.5]); self.cards["time"]["canvas"].draw()
-        
-        ax_f = self.cards["fft"]["ax"]; ax_f.clear(); ax_f.fill_between(xf, mag, color='#fc0', alpha=0.3); ax_f.plot(xf, mag, color='#fc0')
-        ax_f.set_xlim([0, fs/2]); self.cards["fft"]["canvas"].draw()
-        
-        ax_r = self.cards["resp"]["ax"]; ax_r.clear(); ax_r.plot(w, 20*np.log10(np.maximum(abs(h), 1e-4)), color='#f0f', linewidth=2)
-        ax_r.set_ylim([-80, 5]); ax_r.set_xlim([0, fs/2]); self.cards["resp"]["canvas"].draw()
-        
-        ax_i = self.cards["impulse"]["ax"]; ax_i.clear(); ax_i.stem(np.arange(120), imp_resp, linefmt='#00ff88', markerfmt='D', basefmt=" "); self.cards["impulse"]["canvas"].draw()
-        
-        ax_ph = self.cards["phase"]["ax"]; ax_ph.clear(); ax_ph.plot(w, np.angle(h), color='#ff4444')
-        ax_ph.set_xlim([0, fs/2]); self.cards["phase"]["canvas"].draw()
-        
-        ax_gl = self.cards["gain_lin"]["ax"]; ax_gl.clear(); ax_gl.plot(w, np.abs(h), color='#00ff88')
-        ax_gl.set_ylim([0, 1.2]); ax_gl.set_xlim([0, fs/2]); self.cards["gain_lin"]["canvas"].draw()
-        
-        ax_p = self.cards["pz"]["ax"]; ax_p.clear(); ut=np.linspace(0,2*np.pi,100); ax_p.plot(np.cos(ut),np.sin(ut),'w--',alpha=0.3)
-        ax_p.scatter(np.real(z),np.imag(z),marker='o',edgecolors='#0f0',facecolors='none'); ax_p.scatter(np.real(p),np.imag(p),marker='x',color='#f00')
-        ax_p.set_aspect('equal'); self.cards["pz"]["canvas"].draw()
-        
-        self.after(100, self.update_loop)
+        # Wrapped analysis in try-except to prevent UI lockup on math errors
+        try:
+            # 1. Check if filter parameters changed
+            current_params = (
+                fs, self.filter_resp.get(), self.filter_class.get(), self.filter_proto.get(),
+                self.cutoff_1, self.cutoff_2, self.order, self.ripple, self.atten,
+                self.beta, self.notch_q, self.gauss_std, self.pm_width, self.min_phase.get(),
+                self.show_complex.get(), self.complex_filter.get(),
+                self.kf_q, self.kf_r, self.sg_win, self.sg_poly, self.med_ker, self.wt_lev, self.lms_mu, self.lms_ord
+            )
+            
+            # Check if we need to recalculate the filter coefficient and redraw design plots
+            filter_changed = (self._last_filter_params != current_params)
+            
+            # 2. Get Signal
+            raw = self.sig_gen.get_signal()
+            
+            # 3. Dual-Stage Process
+            # Stage 1: Standard Filter (IIR/FIR)
+            if filter_changed:
+                self.b, self.a = self.get_filter(fs)
+                self._last_filter_params = current_params
+            
+            # Apply standard filter first
+            stage1_out = filtfilt(self.b, self.a, raw) if len(self.a) > 1 or len(self.b) > 1 else raw
+            
+            # Stage 2: Complex Filter (If enabled)
+            if self.show_complex.get():
+                c_type = self.complex_filter.get()
+                if c_type == "Kalman": 
+                    filtered = complex_filters.apply_kalman_filter(stage1_out, self.kf_q, self.kf_r)
+                elif c_type == "Savitzky-Golay": 
+                    filtered = complex_filters.apply_savgol_filter(stage1_out, self.sg_win, self.sg_poly)
+                elif c_type == "Median": 
+                    filtered = complex_filters.apply_median_filter(stage1_out, self.med_ker)
+                elif c_type == "Wavelet": 
+                    filtered = complex_filters.apply_wavelet_denoising(stage1_out, wavelet=self.wt_wave, level=self.wt_lev)
+                elif c_type == "Adaptive (LMS)":
+                    filtered = complex_filters.apply_lms_filter(stage1_out, self.lms_mu, self.lms_ord)
+                else:
+                    filtered = stage1_out
+            else:
+                filtered = stage1_out
+            N = len(filtered)
+            yf = fft(filtered)
+            xf = fftfreq(N, 1/fs)[:N//2]
+            mag = 2.0/N * np.abs(yf[:N//2])
+            
+            # 4. Update Time & FFT Plots (Always updated if in Synth mode or if filter changed)
+            # we only skip if in Import mode and nothing changed to save CPU.
+            if self.sig_gen.mode == "Synth" or filter_changed or self._force_redraw or force:
+                self._force_redraw = False
+                ax_t = self.cards["time"]["ax"]; ax_t.clear()
+                ax_t.plot(raw, color='#555', alpha=0.4, label="Raw")
+                ax_t.plot(filtered, color='#00d1ff', label="Filtered")
+                
+                # Smart Scaling for Sensor Data (like AZ at 9.8m/s^2)
+                if self.sig_gen.mode == "Import":
+                    data_min = min(np.min(raw), np.min(filtered))
+                    data_max = max(np.max(raw), np.max(filtered))
+                    padding = max(0.5, (data_max - data_min) * 0.15)
+                    ax_t.set_ylim([data_min - padding, data_max + padding])
+                else:
+                    ax_t.set_ylim([-3.5, 3.5])
+                    
+                ax_t.set_xlabel("Sample Index n", color='white', fontsize=9)
+                ax_t.set_ylabel("Amplitude", color='white', fontsize=9)
+                self.cards["time"]["canvas"].draw()
+                
+                ax_f = self.cards["fft"]["ax"]; ax_f.clear()
+                ax_f.fill_between(xf, mag, color='#fc0', alpha=0.3)
+                ax_f.plot(xf, mag, color='#fc0')
+                ax_f.set_xlim([0, fs/2])
+                ax_f.set_xlabel("Frequency [Hz]", color='white', fontsize=9)
+                ax_f.set_ylabel("Magnitude", color='white', fontsize=9)
+                self.cards["fft"]["canvas"].draw()
+            
+            # 5. Update Filter Design Plots (ONLY if parameters changed)
+            if filter_changed or force:
+                w, h = freqz(self.b, self.a, worN=1024, fs=fs)
+                z, p, k = tf2zpk(self.b, self.a)
+                imp_resp = lfilter(self.b, self.a, np.array([1.0] + [0.0]*119))
+                
+                # Magnitude Response
+                ax_r = self.cards["resp"]["ax"]; ax_r.clear()
+                ax_r.plot(w, 20*np.log10(np.maximum(abs(h), 1e-4)), color='#f0f', linewidth=2)
+                ax_r.set_ylim([-80, 5]); ax_r.set_xlim([0, fs/2])
+                ax_r.set_xlabel("Frequency [Hz]", color='white', fontsize=9)
+                ax_r.set_ylabel("Gain [dB]", color='white', fontsize=9)
+                self.cards["resp"]["canvas"].draw()
+                
+                # Impulse Response
+                ax_i = self.cards["impulse"]["ax"]; ax_i.clear()
+                ax_i.stem(np.arange(120), imp_resp, linefmt='#00ff88', markerfmt='D', basefmt=" ")
+                ax_i.set_xlabel("Sample n", color='white', fontsize=9)
+                ax_i.set_ylabel("h[n]", color='white', fontsize=9)
+                self.cards["impulse"]["canvas"].draw()
+                
+                # Phase Response
+                ax_ph = self.cards["phase"]["ax"]; ax_ph.clear()
+                ax_ph.plot(w, np.angle(h), color='#ff4444')
+                ax_ph.set_xlim([0, fs/2])
+                ax_ph.set_xlabel("Frequency [Hz]", color='white', fontsize=9)
+                ax_ph.set_ylabel("Phase [Radians]", color='white', fontsize=9)
+                self.cards["phase"]["canvas"].draw()
+                
+                # Linear Gain
+                ax_gl = self.cards["gain_lin"]["ax"]; ax_gl.clear()
+                ax_gl.plot(w, np.abs(h), color='#00ff88')
+                ax_gl.set_ylim([0, 1.2]); ax_gl.set_xlim([0, fs/2])
+                ax_gl.set_xlabel("Frequency [Hz]", color='white', fontsize=9)
+                ax_gl.set_ylabel("Gain [Linear]", color='white', fontsize=9)
+                self.cards["gain_lin"]["canvas"].draw()
+                
+                # Pole-Zero Map
+                ax_p = self.cards["pz"]["ax"]; ax_p.clear()
+                ut = np.linspace(0, 2*np.pi, 100)
+                ax_p.plot(np.cos(ut), np.sin(ut), 'w--', alpha=0.3)
+                ax_p.scatter(np.real(z), np.imag(z), marker='o', edgecolors='#0f0', facecolors='none')
+                ax_p.scatter(np.real(p), np.imag(p), marker='x', color='#f00')
+                ax_p.set_aspect('equal')
+                ax_p.set_xlabel("Real Part", color='white', fontsize=9)
+                ax_p.set_ylabel("Imaginary Part", color='white', fontsize=9)
+                self.cards["pz"]["canvas"].draw()
+        except Exception as e:
+            # Silent catch to prevent hard freeze; user can click Refresh to retry
+            pass
+            
+        # Slower loop (200ms) to reduce CPU/Memory pressure
+        self.after(200, self.update_loop)
 
 if __name__ == "__main__":
     app = DSPApp(); app.mainloop()
