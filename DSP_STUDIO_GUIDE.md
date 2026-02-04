@@ -1,100 +1,108 @@
 
-========
-Designed by Mehdi sehati shal 
-| version v1.0.0 
-| date : 2026-02-03
-========
+ ### Designed by Mehdi sehati shal | version v3.0 | date : 2026-02-05
+ ---
+ ---
+# Advanced DSP Studio Pro - Comprehensive Guide
 
-# Advanced DSP Studio Pro - Documentation
-
-## 1. Overview
 Advanced DSP Studio Pro is an industrial-grade engineering workbench designed for real-time digital signal processing, filter analysis, and embedded firmware code generation. It bridges the gap between high-level filter theory and low-level C implementation.
 
 ---
 
-## 2. Software Capabilities
-
-###  Signal Generation & Input
-*   **Real-time Synthesizer:** Dual independent oscillators with frequency and amplitude control + variable Gaussian noise.
-*   **Universal Input:** Support for CSV and TXT data imports for analyzing real-world sensor logs.
-*   **Dynamic Bandwidth:** Switchable hardware range (1kHz High-Precision or 10kHz Extended) with automatic Nyquist-locked Fs adjustment up to 20kHz.
-
-###  Comprehensive Filter Engine
-*   **IIR Models:** Butterworth, Chebyshev I & II, Elliptic (Cauer).
-*   **FIR Windows:** Kaiser (with Beta control), Hamming, Hanning, Blackman, and Rectangular.
-*   **Specialized Filters:** High-Speed Notch (with Q-factor control) and complex Band-Pass/Stop responses.
-*   **Advanced Parameters:** Direct control over Order, Cutoff frequencies, Passband Ripple, and Stopband Attenuation.
-
-###  Professional Analytics (Dashboard)
-*   **Dual-View Optimization:** Toggle between "Architect Mode" (Detailed briefs) and "Cockpit Mode" (High-density grid).
-*   **Seven Analytics Modules:**
-    1.  **O-Scope:** Time-domain comparison of Raw vs. Filtered.
-    2.  **FFT Spectrum:** Frequency content visualization.
-    3.  **Magnitude (dB):** Logarithmic gain profile for stopband verification.
-    4.  **Impulse Response:** Verification of ringing and settling time.
-    5.  **Z-Plane Map:** Root-locus stability analysis (Pole/Zero placement).
-    6.  **Phase Response:** Group delay and phase rotation analysis.
-    7.  **Linear Gain:** Voltage-ratio multiplier profile.
-
-### 💻 Embedded Architect Export
-*   **Auto-Generated Documentation:** ASCII Transfer Function $H(z)$ and stability reports.
-*   **Fixed-Point Conversion:** Automatic scaling for `Q1.15` (16-bit) and `Q16.16` (32-bit).
-*   **C Implementation:** Direct Form II (memory-optimized) C functions ready for STM32, ESP32, or ARM CPUs.
+## 📋 Table of Contents
+1. [Installation & Launch](#1-installation--launch)
+2. [Signal Generation & Verification](#2-signal-generation--verification)
+3. [Dual-Stage Filtering Engine](#3-dual-stage-filtering-engine)
+4. [Sensor Data Import & Analysis](#4-sensor-data-import--analysis)
+5. [Analytics Dashboard](#5-analytics-dashboard)
+6. [Embedded C-Code Architect](#6-embedded-c-code-architect)
+7. [Operational Guidelines & Tips](#7-operational-guidelines--tips)
 
 ---
 
-## 3. System Architecture (Block Diagram)
+## 1. Installation & Launch
 
-```mermaid
-graph TD
-    subgraph "Signal Input Layer"
-        A[Sine Oscillators] --> C[Signal Router]
-        B[CSV/TXT Import] --> C
-        N[Noise Generator] --> C
-    end
+### Environment Requirements
+The studio is powered by Python 3.8+ and requires the following scientific libraries:
+*   `numpy`, `scipy`, `matplotlib`, `customtkinter`, `PyWavelets`, `filterpy`.
 
-    subgraph "DSP Engine (SciPy Backend)"
-        C --> D[Filter Coefficient Generator]
-        D --> E[Difference Equation Engine]
-        E --> F[FFT & Spectral Analytics]
-    end
-
-    subgraph "Analytics & Visualization"
-        F --> G1[Time Domain Plot]
-        F --> G2[Spectral Plot]
-        F --> G3[Stability Map]
-        F --> G4[Magnitude/Phase]
-    end
-
-    subgraph "Embedded Export"
-        D --> H[Q-Format Scaling]
-        H --> I[C-Code Template Generator]
-    end
-
-    G1 & G2 & G3 & G4 --> J[UI Dashboard]
-```
+### How to Run
+1.  **Manual Start**: Open your terminal in the project directory and run:
+    ```bash
+    python advanced_dsp_studio.py
+    ```
+2.  **Batch Launch**: Double-click the provided `run_studio.bat` file. It will automatically verify your environment, check for missing dependencies, and launch the application.
 
 ---
 
-## 4. Operational Guidelines
+## 2. Signal Generation & Verification
 
-### Quick Start: Designing an IIR Filter
-1.  **Set Range:** Choose "Extended Range (10kHz)" if working with high-speed signals.
-2.  **Source:** Use 'Synth' to test theory; 'Import' to analyze real captured data.
-3.  **Configure:** 
-    *   Choose `IIR` -> `Butterworth` -> `Low-Pass`.
-    *   Adjust `Cutoff 1` to target your noise frequency.
-4.  **Verify:** Scroll down to the **Z-Plane Stability Map**. Ensure all `X` (poles) are inside the white circle.
-5.  **Export:** Click **Calculate & Analyze**. Copy the generated `float Process(...)` function and the `B_Q15`/`A_Q15` coefficients into your C project.
+The software features a multi-mode **Signal Synthesizer** for stressed-testing your filter designs:
 
-### Stability Warning
-If poles (red X) move outside the white unit circle in the Z-Plane map, the filter is **mathematically unstable**. This will cause an overflow/crash in your hardware implementation. Reduce the filter order or adjust the cutoff to bring the system back to stability.
+*   **Sines Mode**: Dual independent oscillators with frequency and amplitude control + variable Gaussian noise.
+*   **Impulse Mode**: Sends a single mathematical spike. Used to check the **Settling Time** and **Ringing** of your filter.
+*   **Step Mode**: A sudden jump from 0 to 1. Used to measure **Filter Lag** and **Overshoot**—critical for balancing robots/drones.
+*   **Sweep (Chirp) Mode**: A frequency slide from Start to Stop. Acts as a "Live Bode Plot" to see the filter roll-off in real-time.
+*   **Playback Control**: Use the **Play/Pause (⏯)** button in the sidebar to freeze the signal and analyze a specific wave pattern.
 
 ---
 
-## 5. Environment & Installation
-The studio is powered by Python 3.10+ and requires the following industrial-scientific libraries:
-*   `numpy`, `scipy`, `matplotlib`, `customtkinter`
+## 3. Dual-Stage Filtering Engine
 
-**Easy Launch:** Double-click `run_studio.bat`. It will automatically verify your environment, install any missing libraries, and launch the application.
+Advanced DSP Studio Pro uses a sequential serial processing architecture:
 
+### Stage 1: Standard Filter (Classical DSP)
+*   **IIR Models**: Butterworth, Chebyshev I & II, Elliptic (Cauer), Bessel.
+*   **FIR Windows**: Kaiser (with Beta control), Hamming, Hanning, Blackman, Rectangular, and Gaussian.
+*   **Specialized Filters**: High-Speed Notch, Parks-McClellan, and Minimum Phase FIR filters.
+
+### Stage 2: Complex/AI Layer (Advanced Algorithms)
+*   **Kalman Filter**: 1D state estimator for sensor smoothing.
+*   **Savitzky-Golay**: Preserves high-frequency peaks while removing jitter.
+*   **Adaptive LMS Filter**: Self-tuning filter for noise cancellation.
+*   **Wavelet Denoising**: Multi-level decomposition for non-stationary signals.
+*   **Median Filter**: Non-linear spike removal for sensor glitches.
+
+---
+
+## 4. Sensor Data Import & Analysis
+
+Specifically designed for **Bosch/InvenSense Accel-Gyro** logs:
+*   **Axis Selection**: Quickly toggle between **AX, AY, AZ, GX, GY, GZ** with instant graph updates.
+*   **Auto-Fs Detection**: The platform automatically calculates the sampling rate (Hz) from the timestamps in your CSV.
+*   **Smart Scaling**: The Oscilloscope automatically adjusts for high-offset signals (like **AZ at 9.8m/s²** gravity).
+
+---
+
+## 5. Analytics Dashboard
+
+View your filter behavior through seven interactive modules:
+1.  **Oscilloscope**: Real-time Raw vs. Filtered comparison.
+2.  **FFT Spectrum**: Frequency domain power distribution.
+3.  **Magnitude (dB)**: Stopband attenuation and passband ripple.
+4.  **Impulse Response**: Time-domain DNA of the filter.
+5.  **Z-Plane Map**: Stability check (ensure red Xs are inside the unit circle).
+6.  **Phase Response**: Phase rotation and group delay.
+7.  **Linear Gain**: Pure voltage-ratio multiplier profile.
+
+---
+
+## 6. Embedded C-Code Architect
+
+Generate production-ready code via the **"Calculate & Analyze"** wizard:
+
+*   **SOS (Biquads)**: Generates Second-Order Sections for high-order IIR stability.
+*   **Fixed-Point Export**: Tailored `Q1.15` or `Q1.31` scaling for units without an FPU.
+*   **ARM CMSIS-DSP**: Native code generation for STM32 and other Cortex-M processors.
+*   **Algorithm Fusion**: Export includes code for both your Standard filter and your Kalman/LMS layers.
+
+---
+
+## 7. Operational Guidelines & Tips
+
+*   **Stability Warning**: If the Red X (Poles) in the Z-Plane move outside the white circle, your filter is **unstable**. Reduce the Order or check your Cutoff frequency.
+*   **Lag vs. Smoothing**: Use **Step Mode** to see how much delay your filter adds. A lower cutoff makes a smoother signal but adds more lag—find the perfect balance for your control loop!
+*   **Freezing**: If the UI stops responding due to extreme math, click the **Refresh/Reset** icon in the File menu or the sidebar header.
+
+---
+Designed by **Mehdi Sehati** 
+[LinkedIn Profile](https://www.linkedin.com/in/mehdi-sehati-44356bb1/)

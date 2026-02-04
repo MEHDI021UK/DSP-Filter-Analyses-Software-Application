@@ -1,9 +1,11 @@
 import numpy as np
+import tkinter as tk
+import webbrowser
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from scipy.fft import fft, fftfreq
 from scipy.signal import (butter, cheby1, cheby2, ellip, iirnotch,
-                          firwin, lfilter, filtfilt, tf2zpk, freqz)
+                          firwin, lfilter, filtfilt, tf2zpk, freqz, chirp)
 import customtkinter as ctk
 import complex_filters
 
@@ -24,14 +26,29 @@ class SignalGenerator:
         self.imported_data = None
         self.raw_matrix = None # For multi-column CSVs
         self.mode = "Synth" # Synth or Import
+        self.waveform = "Sines"
+        self.sweep_start = 10.0
+        self.sweep_end = 800.0
+        self.sweep_duration = 0.5
+        self.sweep_amp = 1.0
 
     def get_signal(self):
         if self.mode == "Import" and self.imported_data is not None:
             return self.imported_data
         
         y = np.zeros_like(self.t)
-        for s in self.sines:
-            y += s["amp"] * np.sin(2 * np.pi * s["freq"] * self.t + s["phase"])
+        if self.waveform == "Sines":
+            for s in self.sines:
+                y += s["amp"] * np.sin(2 * np.pi * s["freq"] * self.t + s["phase"])
+        elif self.waveform == "Impulse":
+            y[len(y)//4] = 1.0 # Standard impulse spike
+        elif self.waveform == "Step":
+            y[len(y)//4:] = 1.0 # Step response stimulus
+        elif self.waveform == "Sweep":
+            y = self.sweep_amp * chirp(self.t, f0=min(self.sweep_start, self.fs/2-1), 
+                                      f1=min(self.sweep_end, self.fs/2-1), 
+                                      t1=self.duration, method='linear')
+            
         y += self.noise_lvl * np.random.normal(size=len(self.t))
         return y
 
@@ -65,6 +82,15 @@ class DSPApp(ctk.CTk):
         self._force_redraw = False
         self._crash_count = 0 
         self.fs_val = ctk.StringVar(value="2000")
+        self.running = True # Playback state
+        
+        # C-Code Export Settings
+        self.c_data_type = ctk.StringVar(value="Float32")
+        self.c_impl_style = ctk.StringVar(value="Standard C")
+        self.c_iir_struct = ctk.StringVar(value="Cascaded Biquads (SOS)")
+        
+        self.sine_controls = [] # For hiding/showing
+        self.sweep_controls = []
         
         # Complex Filter Parameters
         self.kf_q = 1e-4; self.kf_r = 1e-2
@@ -80,6 +106,7 @@ class DSPApp(ctk.CTk):
         self.param_sliders = {}
         
         self.setup_ui()
+        self.init_menu()
         
         # Optimization: Store last state to avoid redundant calculations/draws
         self._last_filter_params = None
@@ -91,6 +118,66 @@ class DSPApp(ctk.CTk):
     def on_closing(self):
         self.quit()
         self.destroy()
+
+    def init_menu(self):
+        self.menubar = tk.Menu(self)
+        
+        # File Menu
+        file_menu = tk.Menu(self.menubar, tearoff=0)
+        file_menu.add_command(label="New Project (Reset)", command=self.manual_refresh)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.on_closing)
+        self.menubar.add_cascade(label="File", menu=file_menu)
+        
+        # View Menu
+        view_menu = tk.Menu(self.menubar, tearoff=0)
+        view_menu.add_checkbutton(label="Extended Range", variable=self.high_bw, command=self.update_bw_range)
+        view_menu.add_checkbutton(label="Show Briefs", variable=self.show_briefs, command=self.toggle_briefs)
+        self.menubar.add_cascade(label="View", menu=view_menu)
+        
+        # Tutorial Menu
+        self.menubar.add_command(label="Tutorial", command=self.open_tutorial)
+        
+        # About Menu
+        self.menubar.add_command(label="About", command=self.show_about)
+
+        # Polynomial Menu
+        poly_menu = tk.Menu(self.menubar, tearoff=0)
+        poly_menu.add_command(label="Polynomial Analysis (Coming Soon)", state="disabled")
+        self.menubar.add_cascade(label="Polynomial", menu=poly_menu)
+        
+        self.configure(menu=self.menubar)
+
+    def open_tutorial(self):
+        webbrowser.open("https://github.com/MEHDI021UK/DSP-Filter-Analyses-Software-Application?tab=readme-ov-file#1-filter-types-overview")
+
+    def open_linkedin(self):
+        webbrowser.open("https://www.linkedin.com/in/mehdi-sehati-44356bb1/")
+
+    def show_about(self):
+        about_win = ctk.CTkToplevel(self)
+        about_win.title("About Advanced DSP Studio Pro")
+        about_win.geometry("500x400")
+        about_win.attributes("-topmost", True)
+        
+        content = (
+            "Advanced DSP Studio Pro is an industrial-grade engineering workbench "
+            "designed for real-time digital signal processing, filter analysis, "
+            "and embedded firmware code generation.\n\n"
+            "It bridges the gap between high-level filter theory and low-level C implementation.\n\n"
+            "-----------------------------------\n"
+            "Designed by: Mehdi Sehati"
+        )
+        
+        ctk.CTkLabel(about_win, text="Advanced DSP Studio Pro", font=ctk.CTkFont(size=20, weight="bold")).pack(pady=20)
+        
+        txt = ctk.CTkLabel(about_win, text=content, wraplength=400, justify="center")
+        txt.pack(pady=10, padx=20)
+        
+        ctk.CTkButton(about_win, text="Visit LinkedIn Profile", fg_color="#0077B5", 
+                      command=self.open_linkedin).pack(pady=20)
+        
+        ctk.CTkButton(about_win, text="Close", command=about_win.destroy).pack(pady=10)
 
     def setup_ui(self):
         self.grid_columnconfigure(0, weight=0)
@@ -107,9 +194,9 @@ class DSPApp(ctk.CTk):
         
         ctk.CTkLabel(header_frame, text="DSP Controls", font=ctk.CTkFont(size=22, weight="bold")).pack(side="left", padx=10)
         
-        self.refresh_btn = ctk.CTkButton(header_frame, text="🔄", width=40, font=ctk.CTkFont(size=18),
-                                         fg_color="#333", hover_color="#555", command=self.manual_refresh)
-        self.refresh_btn.pack(side="right", padx=10)
+        self.playback_btn = ctk.CTkButton(header_frame, text="⏸", width=40, font=ctk.CTkFont(size=18),
+                                         fg_color="#333", hover_color="#555", command=self.toggle_playback)
+        self.playback_btn.pack(side="right", padx=10)
 
         # System Sampling Rate (Fs) - Input Box
         self.fs_frame = ctk.CTkFrame(self.sidebar)
@@ -138,13 +225,76 @@ class DSPApp(ctk.CTk):
                         variable=self.min_phase).pack(pady=2, anchor="w", padx=5)
 
         # Synth Group
-        self.synth_group = self.create_group("Signal Synthesizer", [
+        # Synth Group
+        self.synth_group = ctk.CTkFrame(self.sidebar)
+        self.synth_group.pack(fill="x", pady=5, padx=5)
+        ctk.CTkLabel(self.synth_group, text="Signal Synthesizer", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=2)
+
+        # Stimulus Selector FIRST
+        stim_frame = ctk.CTkFrame(self.synth_group, fg_color="transparent")
+        stim_frame.pack(fill="x", pady=5)
+        ctk.CTkLabel(stim_frame, text="Waveform Type:", font=ctk.CTkFont(size=11)).pack(pady=2)
+        self.stim_selector = ctk.CTkSegmentedButton(stim_frame, values=["Sines", "Impulse", "Step", "Sweep"],
+                                                   command=self.toggle_waveform_ui)
+        self.stim_selector.set("Sines")
+        self.stim_selector.pack(pady=2, padx=10, fill="x")
+
+        # Sine & Noise Params
+        params = [
             ("Sine 1 Freq", 0, 1000, 10, lambda v: self.set_sine(0, "freq", v)),
             ("Sine 1 Amp", 0, 2, 1.0, lambda v: self.set_sine(0, "amp", v)),
             ("Sine 2 Freq", 0, 1000, 500, lambda v: self.set_sine(1, "freq", v)),
             ("Sine 2 Amp", 0, 2, 0.5, lambda v: self.set_sine(1, "amp", v)),
             ("Noise Level", 0, 1, 0.05, lambda v: setattr(self.sig_gen, 'noise_lvl', float(v)))
-        ])
+        ]
+        
+        for i, (label, low, high, start, cmd) in enumerate(params):
+            sc = ctk.CTkFrame(self.synth_group, fg_color="transparent"); sc.pack(fill="x", pady=2)
+            hf = ctk.CTkFrame(sc, fg_color="transparent"); hf.pack(fill="x")
+            ctk.CTkLabel(hf, text=label, font=ctk.CTkFont(size=11)).pack(side="left", padx=5)
+            vl = ctk.CTkLabel(hf, text=str(start), font=ctk.CTkFont(size=11, weight="bold"), text_color="#fc0")
+            vl.pack(side="right", padx=5)
+            
+            # Unit logic for labels
+            unit = "Hz" if "Freq" in label else ("V" if "Amp" in label or "Level" in label else "")
+            def make_update(c, l, u, lbl):
+                def update_cmd(v):
+                    fmt = f"{float(v):.1f}" if float(v) > 1 else f"{float(v):.3f}"
+                    l.configure(text=f"{fmt} {u}"); c(v)
+                return update_cmd
+            
+            s = ctk.CTkSlider(sc, from_=low, to=high, command=make_update(cmd, vl, unit, label))
+            s.set(start); s.pack(fill="x")
+            if "Freq" in label: self.freq_sliders.append(s)
+            if "Sine" in label: self.sine_controls.append(sc)
+
+        # Sweep Params (Start, Stop, Duration, Amplitude)
+        sweep_params = [
+            ("Sweep Start Freq", 1, 1000, 10, lambda v: setattr(self.sig_gen, 'sweep_start', float(v))),
+            ("Sweep Stop Freq", 1, 1000, 800, lambda v: setattr(self.sig_gen, 'sweep_end', float(v))),
+            ("Sweep Amplitude", 0, 2, 1.0, lambda v: setattr(self.sig_gen, 'sweep_amp', float(v))),
+            ("Sweep Duration (s)", 0.1, 2.0, 0.5, lambda v: self.update_sweep_domain(v))
+        ]
+
+        for label, low, high, start, cmd in sweep_params:
+            sc = ctk.CTkFrame(self.synth_group, fg_color="transparent")
+            # We don't pack them yet
+            hf = ctk.CTkFrame(sc, fg_color="transparent"); hf.pack(fill="x")
+            ctk.CTkLabel(hf, text=label, font=ctk.CTkFont(size=11)).pack(side="left", padx=5)
+            vl = ctk.CTkLabel(hf, text=str(start), font=ctk.CTkFont(size=11, weight="bold"), text_color="#00ff88")
+            vl.pack(side="right", padx=5)
+            
+            unit = "Hz" if "Freq" in label else "s"
+            def make_sw_update(c, l, u):
+                def up(v):
+                    fmt = f"{float(v):.1f}" if float(v) > 1 else f"{float(v):.2f}"
+                    l.configure(text=f"{fmt} {u}"); c(v)
+                return up
+            
+            s = ctk.CTkSlider(sc, from_=low, to=high, command=make_sw_update(cmd, vl, unit))
+            s.set(start); s.pack(fill="x")
+            self.sweep_controls.append(sc)
+            if "Freq" in label: self.freq_sliders.append(s)
 
         # Import Group
         self.import_group = ctk.CTkFrame(self.sidebar)
@@ -220,6 +370,23 @@ class DSPApp(ctk.CTk):
         self.comp_param_frame.pack(fill="x", pady=5)
         
         self.update_complex_ui("Kalman")
+
+        # C-Code Export Settings Group
+        self.c_settings_group = ctk.CTkFrame(self.sidebar)
+        self.c_settings_group.pack(fill="x", pady=10, padx=5)
+        ctk.CTkLabel(self.c_settings_group, text="C-Code Export Settings", font=ctk.CTkFont(weight="bold")).pack(pady=5)
+        
+        ctk.CTkLabel(self.c_settings_group, text="Data Type", font=ctk.CTkFont(size=11)).pack()
+        ctk.CTkOptionMenu(self.c_settings_group, values=["Float32", "Fixed Q15", "Fixed Q31"], 
+                          variable=self.c_data_type, fg_color="#444").pack(pady=2, padx=10, fill="x")
+        
+        ctk.CTkLabel(self.c_settings_group, text="Implementation style", font=ctk.CTkFont(size=11)).pack()
+        ctk.CTkOptionMenu(self.c_settings_group, values=["Standard C", "ARM CMSIS-DSP"], 
+                          variable=self.c_impl_style, fg_color="#444").pack(pady=2, padx=10, fill="x")
+        
+        ctk.CTkLabel(self.c_settings_group, text="IIR Structure", font=ctk.CTkFont(size=11)).pack()
+        ctk.CTkOptionMenu(self.c_settings_group, values=["Direct Form II", "Cascaded Biquads (SOS)"], 
+                          variable=self.c_iir_struct, fg_color="#444").pack(pady=2, padx=10, fill="x")
 
         # Analyze Button - ALWAYS AT BOTTOM
         self.calc_btn = ctk.CTkButton(self.sidebar, text="Calculate & Analyze", 
@@ -392,6 +559,25 @@ class DSPApp(ctk.CTk):
         self._force_redraw = True
         self.update_ui_visibility()
 
+    def toggle_waveform_ui(self, choice):
+        setattr(self.sig_gen, 'waveform', choice)
+        # Hide All
+        for sc in self.sine_controls: sc.pack_forget()
+        for sc in self.sweep_controls: sc.pack_forget()
+        
+        if choice == "Sines":
+            for sc in self.sine_controls: sc.pack(fill="x", pady=2)
+        elif choice == "Sweep":
+            for sc in self.sweep_controls: sc.pack(fill="x", pady=2)
+            
+        self.force_update()
+
+    def update_sweep_domain(self, val):
+        val = float(val)
+        self.sig_gen.duration = val
+        self.sig_gen.t = np.arange(0, val, 1/self.sig_gen.fs)
+        self.force_update()
+
     def update_complex_ui(self, choice):
         self.force_update()
         # Update Info
@@ -434,6 +620,14 @@ class DSPApp(ctk.CTk):
     def trigger_import_run(self):
         self.import_triggered = True; self.f_frame.pack(fill="x", pady=10, padx=5)
         self.param_group.pack(fill="x", pady=5, padx=5); self.calc_btn.pack(pady=10, padx=10, fill="x"); self.update_ui_visibility()
+
+    def toggle_playback(self):
+        self.running = not self.running
+        if self.running:
+            self.playback_btn.configure(text="⏸", fg_color="#333")
+            self.update_loop() # Restart if it stopped
+        else:
+            self.playback_btn.configure(text="▶", fg_color="#28a745")
 
     def manual_refresh(self):
         """Force a full reset of the engine state to unfreeze."""
@@ -546,7 +740,7 @@ class DSPApp(ctk.CTk):
         else: opts = ["Grey-Markel", "All-Pass Lattice"]
         self.proto_menu.configure(values=opts); self.filter_proto.set(opts[0]); self.update_ui_visibility()
 
-    def get_filter(self, fs):
+    def get_filter(self, fs, output='ba'):
         res = self.filter_resp.get(); f_class = self.filter_class.get(); proto = self.filter_proto.get(); nyq = fs / 2
         if res == "None" or f_class == "None" or proto == "None": return np.array([1.0]), np.array([1.0])
         c1 = np.clip(self.cutoff_1, 0.1, nyq - 1); c2 = np.clip(self.cutoff_2, c1 + 0.1, nyq - 1)
@@ -559,14 +753,13 @@ class DSPApp(ctk.CTk):
         try:
             if f_class == "IIR":
                 from scipy.signal import bessel
-                if proto == "Butterworth": return butter(self.order, Wn, btype=btype)
-                elif proto == "Chebyshev I": return cheby1(self.order, self.ripple, Wn, btype=btype)
-                elif proto == "Chebyshev II": return cheby2(self.order, self.atten, Wn, btype=btype)
-                elif proto == "Elliptic": return ellip(self.order, self.ripple, self.atten, Wn, btype=btype)
-                elif proto == "Bessel": return bessel(self.order, Wn, btype=btype)
+                if proto == "Butterworth": return butter(self.order, Wn, btype=btype, output=output)
+                elif proto == "Chebyshev I": return cheby1(self.order, self.ripple, Wn, btype=btype, output=output)
+                elif proto == "Chebyshev II": return cheby2(self.order, self.atten, Wn, btype=btype, output=output)
+                elif proto == "Elliptic": return ellip(self.order, self.ripple, self.atten, Wn, btype=btype, output=output)
+                elif proto == "Bessel": return bessel(self.order, Wn, btype=btype, output=output)
                 elif proto == "Gaussian": 
-                    # Gaussian IIR is approximation, here we use Butterworth as base but we can simulate
-                    return butter(self.order, Wn, btype=btype) 
+                    return butter(self.order, Wn, btype=btype, output=output) 
             else:
                 from scipy.signal import remez, minimum_phase
                 numtaps = self.order * 4 + 1
@@ -598,81 +791,103 @@ class DSPApp(ctk.CTk):
     def show_report(self):
         fs = self.sig_gen.fs; b, a = self.get_filter(fs); z, p, k = tf2zpk(b, a)
         ftype = self.filter_resp.get(); fclass = self.filter_class.get()
+        data_type = self.c_data_type.get()
+        impl_style = self.c_impl_style.get()
+        iir_struct = self.c_iir_struct.get()
+        
         rw = ctk.CTkToplevel(self); rw.title(f"DSP Report: {fclass} {ftype}")
-        rw.geometry("1000x950"); rw.attributes("-topmost", True)
+        rw.geometry("1100x950"); rw.attributes("-topmost", True)
         
         txt = ctk.CTkTextbox(rw, font=ctk.CTkFont(family="Consolas", size=13))
         txt.pack(fill="both", expand=True, padx=20, pady=20)
         
         # 1. Header & Metadata
         rep = "/*" + "="*75 + "\n"
-        rep += " * INDUSTRIAL DSP EXPORT - ARCHITECT REPORT\n"
+        rep += " * INDUSTRIAL DSP EXPORT - ADVANCED FIRMWARE ARCHITECT\n"
         rep += f" * Target: {fclass} {ftype} Filter\n"
+        rep += f" * Format: {data_type} | Implementation: {impl_style}\n"
+        rep += f" * Structure: {iir_struct if fclass == 'IIR' else 'Direct Form'}\n"
         rep += " " + "="*75 + "*/\n\n"
+        
+        rep += "#include <stdint.h>\n"
+        rep += "#include <math.h>\n"
+        if impl_style == "ARM CMSIS-DSP":
+            rep += "#include \"arm_math.h\"\n"
+        rep += "\n"
+        
         rep += f"#define FS_HZ           {fs}\n"
-        rep += f"#define FILTER_ORDER     {len(b)-1}\n"
-        rep += f"#define FILTER_TYPE      \"{ftype}\"\n"
-        rep += f"#define DESIGN_METHOD    \"{self.filter_proto.get()}\"\n\n"
+        rep += f"#define FILTER_ORDER     {len(b)-1 if fclass == 'FIR' else self.order}\n"
         
-        # 2. Mathematical Transfer Function H(z)
-        rep += "/* --- MATHEMATICAL TRANSFER FUNCTION H(z) ---\n"
-        def fmt_z(coeffs):
-            terms = []
-            for i, c in enumerate(coeffs):
-                if abs(c) < 1e-10: continue
-                sign = "+ " if c >= 0 and i > 0 else ("- " if i > 0 else "")
-                val = abs(c) if i > 0 else c
-                if i == 0: terms.append(f"{val:.6f}")
-                else: terms.append(f"{sign}{val:.6f}z^-{i}")
-            return " ".join(terms)
+        # 2. Coefficients Handling
+        rep += "\n// --- COEFFICIENTS ---\n"
         
-        num = fmt_z(b); den = fmt_z(a)
-        w = max(len(num), len(den))
-        rep += f"      {num.center(w)}\nH(z) = {'-' * (w + 6)}\n      {den.center(w)}\n*/\n\n"
-        
-        # 3. Stability Summary
-        stable = np.all(np.abs(p) < 1.0)
-        rep += "// --- STABILITY ANALYSIS ---\n"
-        rep += f"// Status: {'[OK] STABLE' if stable else '[!!] UNSTABLE - CHECK DESIGN'}\n"
-        rep += f"// Max Pole Radius: {np.max(np.abs(p)) if len(p)>0 else 0:.6f}\n\n"
-        
-        # 4. Coefficients (Fixed Point)
-        rep += "// --- FIXED POINT COEFFICIENTS ---\n"
-        rep += "// Q1.15 Format (Scaled by 32767)\n"
-        bq15 = np.round(b * 32767).astype(int); aq15 = np.round(a * 32767).astype(int)
-        rep += f"static const int16_t B_Q15[] = {{{', '.join(map(str, bq15))}}};\n"
-        rep += f"static const int16_t A_Q15[] = {{{', '.join(map(str, aq15))}}};\n\n"
-        
-        # 5. Tailored C-Code Function
-        func_name = f"{ftype.replace('-','')}_{fclass}_Process"
-        rep += f"/* --- OPTIMIZED C IMPLEMENTATION: {fclass} {ftype} ---\n"
-        rep += " * Structure: Direct Form II (Memory efficient)\n"
-        rep += " */\n"
-        rep += f"float {func_name}(float in_sample) {{\n"
-        if fclass == "IIR":
-            rep += f"    static float w[FILTER_ORDER + 1] = {{0.0f}};\n"
-            rep += "    float out_sample = 0.0f;\n\n"
-            rep += "    // Feedback (A coefficients)\n"
-            rep += "    float wn = in_sample;\n"
-            for i in range(1, len(a)):
-                rep += f"    wn -= ({a[i]:.12f}f * w[{i}]);\n"
-            rep += f"    w[0] = wn;\n\n"
-            rep += "    // Feedforward (B coefficients)\n"
-            for i in range(len(b)):
-                rep += f"    out_sample += ({b[i]:.12f}f * w[{i}]);\n"
-            rep += "\n    // Shift delay line\n"
-            rep += f"    for(int i = FILTER_ORDER; i > 0; i--) w[i] = w[i-1];\n\n"
-        else: # FIR
-            rep += f"    static float x[FILTER_ORDER + 1] = {{0.0f}};\n"
-            rep += "    float out_sample = 0.0f;\n\n"
-            rep += "    x[0] = in_sample;\n"
-            rep += "    for(int i = 0; i <= FILTER_ORDER; i++) {\n"
-            rep += "        out_sample += B_COEFS[i] * x[i];\n"
-            rep += "    }\n"
-            rep += "    for(int i = FILTER_ORDER; i > 0; i--) x[i] = x[i-1];\n"
+        if fclass == "IIR" and iir_struct == "Cascaded Biquads (SOS)":
+            sos = self.get_filter(fs, output='sos')
+            rep += f"#define NUM_STAGES       {sos.shape[0]}\n"
             
-        rep += "    return out_sample;\n"
-        rep += "}\n\n"
+            if data_type == "Float32":
+                rep += "static float sos_coeffs[] = {\n"
+                for i, s in enumerate(sos):
+                    # b0, b1, b2, a1, a2 (a0 is usually 1.0)
+                    rep += f"    {s[0]:.10f}f, {s[1]:.10f}f, {s[2]:.10f}f, {s[4]:.10f}f, {s[5]:.10f}f, // Stage {i}\n"
+                rep += "};\n"
+            elif data_type == "Fixed Q15":
+                rep += "static const int16_t sos_coeffs[] = {\n"
+                for i, s in enumerate(sos):
+                    b0, b1, b2 = s[0:3]; a1, a2 = s[4:6]
+                    coeffs = [int(x * 32767) for x in [b0, b1, b2, -a1, -a2]] # Note inverted a in ARM/CMSIS
+                    rep += f"    {', '.join(map(str, coeffs))}, // Stage {i}\n"
+                rep += "};\n"
+            
+            # Implementation function
+            if impl_style == "ARM CMSIS-DSP":
+                rep += "\n// CMSIS-DSP Biquad Setup\n"
+                rep += "static arm_biquad_casd_df1_inst_f32 S;\n"
+                rep += "static float state[4 * NUM_STAGES];\n\n"
+                rep += "void Filter_Init(void) {\n"
+                rep += "    arm_biquad_cascade_df1_init_f32(&S, NUM_STAGES, sos_coeffs, state);\n"
+                rep += "}\n\n"
+                rep += "float Filter_Process(float in) {\n"
+                rep += "    float out;\n"
+                rep += "    arm_biquad_cascade_df1_f32(&S, &in, &out, 1);\n"
+                rep += "    return out;\n"
+                rep += "}\n"
+            else:
+                rep += "\n// Standard Biquad Implementation\n"
+                rep += "typedef struct { float w1, w2; } BiquadState;\n"
+                rep += "static BiquadState bq_states[NUM_STAGES];\n\n"
+                rep += "float Filter_Process(float in) {\n"
+                rep += "    float x = in;\n"
+                rep += "    for(int i=0; i<NUM_STAGES; i++) {\n"
+                rep += "        float *c = &sos_coeffs[i*5];\n"
+                rep += "        float w = x - c[3]*bq_states[i].w1 - c[4]*bq_states[i].w2;\n"
+                rep += "        x = c[0]*w + c[1]*bq_states[i].w1 + c[2]*bq_states[i].w2;\n"
+                rep += "        bq_states[i].w2 = bq_states[i].w1; bq_states[i].w1 = w;\n"
+                rep += "    }\n    return x;\n}\n"
+
+        else: # Direct Form (IIR or FIR)
+            if data_type == "Float32":
+                rep += f"static const float B_COEFFS[] = {{{', '.join([f'{x:.10f}f' for x in b])}}};\n"
+                if fclass == "IIR":
+                    rep += f"static const float A_COEFFS[] = {{{', '.join([f'{x:.10f}f' for x in a])}}};\n"
+            
+            # Logic Function
+            rep += f"\nfloat Filter_Process(float in) {{\n"
+            if fclass == "FIR":
+                rep += f"    static float x[FILTER_ORDER + 1] = {{0.0f}};\n"
+                rep += "    float out = 0.0f; x[0] = in;\n"
+                rep += "    for(int i=0; i<=FILTER_ORDER; i++) out += B_COEFFS[i] * x[i];\n"
+                rep += "    for(int i=FILTER_ORDER; i>0; i--) x[i] = x[i-1];\n"
+                rep += "    return out;\n"
+            else: # Direct Form II IIR
+                rep += f"    static float w[FILTER_ORDER + 1] = {{0.0f}};\n"
+                rep += "    float wn = in;\n"
+                for i in range(1, len(a)): rep += f"    wn -= A_COEFFS[{i}] * w[{i}];\n"
+                rep += "    w[0] = wn; float out = 0.0f;\n"
+                for i in range(len(b)): rep += f"    out += B_COEFFS[{i}] * w[{i}];\n"
+                rep += "    for(int i=FILTER_ORDER; i>0; i--) w[i] = w[i-1];\n"
+                rep += "    return out;\n"
+            rep += "}\n\n"
 
         # 6. Complex Filter Implementation (If enabled)
         if self.show_complex.get():
@@ -740,6 +955,8 @@ class DSPApp(ctk.CTk):
         txt.insert("1.0", rep); txt.configure(state="disabled")
 
     def update_loop(self, force=False):
+        if not self.running and not force: return
+        
         # Optimization: only process if signal exists or in synth mode
         if self.sig_gen.mode == "Import" and self.sig_gen.imported_data is None:
             self.after(300, self.update_loop); return
