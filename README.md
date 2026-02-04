@@ -1,11 +1,14 @@
 Advanced DSP Studio Pro software
 
+[<img src="https://img.shields.io/badge/RUN%20ONLINE%20DSP%20Studio-2ea44f?style=for-the-badge&logo=streamlit&logoColor=white" height="50">](https://onlinedspworkbench-srtatnw3oqgkx9chua8z89.streamlit.app/)
+
 **Date:** 2026-01-20 Advanced DSP Studio Pro - v1.0 
 **Topics:** Filter types, FIR/IIR design, sensor recommendations, stability, Z-transform, resources.
 
 **Date:** 2026-02-04 
 Release Notes: Advanced DSP Studio Pro - v2.0 (Industrial Edition)
 The Advanced DSP Studio Pro has been upgraded to a high-performance industrial tool designed for real-world sensor fusion, motion analysis, and embedded systems development. This version introduces a breakthrough Dual-Stage Filtering Engine and native support for high-precision accelerometer and gyroscope data.
+
 
 
 # Digital Signal Processing (DSP) & Filters — Tutorials
