@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/IIREllipticFilters.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:28 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Elliptic Filters</title>
+<style type="text/css">
+.style1 {
+	font-size: x-large;
+	color: #008000;
+}
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+</style>
+<meta content="Elliptic, Butterworth, IIR, filter,inverse chebyshev, Gauss, bessel, brick wall" name="keywords" />
+<meta content="The design of Elliptic IIR Filters, Brick Wall Filters, up to 15 poles." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style1">
+		Elliptic Filters&nbsp;&nbsp; </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>The Elliptic filter is the ultimate filter for narrow transition bands. These 
+are as close to brick wall filters as can be made. These filters allow for the 
+adjustment of both 
+the pass band ripple and stop band attenuation as ways to decrease the 
+transition bandwidth.</p>
+<p>In the example below, the filter&#39;s pass band ripple is set to 0.001 dB and the 
+attenuation is set to -80 dB. In theory, we could increase the ripple, and 
+decrease the attenuation in order to sharpen the skirt even more, but this 
+filter is at its limits. Elliptic filter design is limited by the proximity of 
+the poles to the imaginary axis. Or more precisely, ones ability to control the 
+pole&#39;s actual locations during the calculation of the poles, and their 
+implementation. In other words, math errors limit us.</p>
+<p>The free Iowa Hills IIR Filter Designer uses the algorithm described in: 
+Elliptic Functions for Filter Design, H. J. Orchard and Alan N. Willson, IEEE 
+Transactions on Circuits and Systems, April 1977. We modified the algorithm a 
+bit, and are able to synthesize filters up to 15 poles, but above 8 poles, we 
+need to restrict the ripple and attenuation levels. </p>
+<p>Whether one can actually implement one of these will depend on the number of 
+processor bits available. The filter shown here requires at least 24 bits to 
+remain stable.</p>
+<p>
+<img alt="Elliptic Low Pass.png" height="400" src="IIR%20Polys/Elliptic%20Low%20Pass.png" width="522" /></p>
+<p>A good way to assess the Elliptic is to compare it to a Butterworth. 
+Depending on the number of bits in the ADC, it may not be possible to get more 
+than 65 dB of attenuation, so in this case, the Elliptic does the same task with 
+6 poles as a 14 pole Butterworth. </p>
+<p>
+<img alt="Elliptic Butterworth Comparison.png" height="400" src="IIR%20Polys/Elliptic%20Butterworth%20Comparison.png" width="522" /></p>
+
+<p>&nbsp;</p>
+<p>The free <a href="4IIRFilterPage.html" >Iowa Hills IIR Filter Designer</a> will synthesize 
+Elliptic 
+filters up to 15 poles.</p>
+<p>The source code for generating Elliptic low pass prototype filters is given 
+on our
+<a href="A7ExampleCodePage.html">Example C Code Page</a>. </p>
+
+<p><a href="IIRChebyshevFilters.html" >Chebyshev IIR Filters</a><br />
+<a href="IIRInverseChebyshevFilters.html" >Inverse Chebyshev IIR 
+Filters</a><br />
+<a href="IIREllipticFilters.html" >Elliptic IIR Filters</a></p>
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/IIREllipticFilters.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:28 GMT -->
+</html>

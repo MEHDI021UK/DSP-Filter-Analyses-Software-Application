@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/7AAdjGaussAlgorithm.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:48 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Adjustable Gauss Polynomial Algorithm</title>
+<style type="text/css">
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+</style>
+<meta content="Gauss, bessel, butterworth, transitional filter" name="keywords" />
+<meta content="This page defines the algorithm for the Adjustable Gauss Polynomial. A new polynomial for transitional filter design." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15">Adjustable Gauss Polynomial 
+		Algorithm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>
+		<a href="Index.html" >Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="7AdjustablePolyPage.html" >Adjustable Gauss 
+		Filters Page</a></p>
+<p>This page defines the algorithm for the Adjustable Gauss Polynomial. A 
+new polynomial for transitional filter design.</p>
+<p>The Gauss polynomial is defined as:</p>
+<p><img alt="Equation1.png" src="Adj%20Gauss/Equation1.png" /></p>
+<p>This algorithm modifies these coefficients by taking them to the power of gamma, -2 &lt;= 
+gamma 
+&lt;= 1 as shown here:</p>
+<p><img alt="Equation2.png" src="Adj%20Gauss/Equation2.png" /></p>
+<p>There are three interesting Gamma settings worth noting. Gamma = 0.7 gives a 
+response very close to the Bessel and Gamma = -2.0 gives a response very close 
+to the Butterworth. With Gamma = 0.0, G(s) reduces to the following, which 
+places the poles on the unit circle.</p>
+<p>
+<img alt="Equation3.png" src="Adj%20Gauss/Equation3.png" /></p>
+<p>This shows how the poles move across the s plane as gamma varies.</p>
+<p>
+<img alt="PoleTrajectoriesFor AlgorithmPage" src="Adj%20Gauss/PoleTrajectoriesFor%20AlgorithmPage.png" /></p>
+<p>Gamma is limited to the range of 1.0 to -2.0. The limit is set at -2.0, which 
+approaches the Butterworth response, because the factorial squared coefficients 
+become quite large which causes problems calculating the roots. It also makes 
+sense to simply use the Butterworth beyond that point. Gamma can be set greater 
+than 1, but this creates a response even more relaxed than the Gauss, and it is 
+hard to imagine a need for that.</p>
+<p>This code snippet is used to calculate the polynomial coefficients in Iowa 
+Hills software. Note that the software changes the sign and scale of Gamma from 
+that entered by the user. See the note below for an explanation.</p>
+<p>int j, N, RootsCount;<br />
+double GaussCoeff[MAXDEGREE];<br />
+N = NumPoles;<br />
+if(Gamma &gt; 0.0)Gamma *= 2.0;<br />
+GaussCoeff[0] = 1.0;<br />
+GaussCoeff[1] = 0.0;<br />
+for(j=2; j&lt;=2*N; j+=2)<br />
+&nbsp;{<br />
+&nbsp;
+GaussCoeff[j] = pow(Factorial(j/2),&nbsp; Gamma);<br />
+&nbsp;
+GaussCoeff[j+1] = 0.0;<br />
+&nbsp;
+if( (j/2) % 2 == 1)GaussCoeff[j] *= -1.0;<br />
+&nbsp;}</p>
+<p>From here, the GaussCoeff array is sent to a root solver. Upon return, we 
+scale the imaginary part of the roots by a factor of 1.1 as shown below. It 
+should be noted that the root solver also finds the roots in the right hand 
+plane, which we eventually discard, so at this point in the code, we have twice 
+as many roots as desired filter poles.</p>
+<p>We scale the root&#39;s imaginary part to help flatten the pass band somewhat 
+when Gamma = -2 (1.0 to the user). After frequency correction, this scaling has 
+the affect of moving the poles toward the imaginary axis.</p>
+<p>for(j=0; j&lt;N*2; j++)Roots[j] = ComplexD( Roots[j].real(), Roots[j].imag() * 
+1.10 );</p>
+<p>It should be noted here that there was little effort made to get this 
+polynomial to replicate a Butterworth, Gauss, or Bessel, nor is it necessary. 
+Its purpose is to provide a means to transition between these various responses 
+in a smooth way. If a true Gaussian response is needed, then the Gauss polynomial 
+should be used. Likewise for the Butterworth and Bessel.</p>
+<p>&nbsp;</p>
+<p class="style15">Regarding Gamma in Iowa Hills software.</p>
+<p>In Iowa Hills software, the user can vary Gamma from -1 to 1, but the actual 
+Gamma used in the calculations is varying from 1 to -2. We changed the scale and 
+the sign of Gamma in the user interface for the following reasons.</p>
+<p>For the sake of simplicity, it seemed cleaner to keep Gamma between 1 and -1, 
+hence the
+scaling. We changed the sign because it seemed better to use 1, rather than -1, 
+for a flat pass band response.</p>
+<p>The range of Gamma is scaled for simplicity, but it also helps linearize the 
+user interface. The degree to which actual Gamma affects the roots for values &lt; 
+-1 diminishes greatly because of the factorial term, so as shown in the code 
+snippet, we multiply the input Gamma by 2 if it is &lt; 0.</p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/7AAdjGaussAlgorithm.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:48 GMT -->
+</html>

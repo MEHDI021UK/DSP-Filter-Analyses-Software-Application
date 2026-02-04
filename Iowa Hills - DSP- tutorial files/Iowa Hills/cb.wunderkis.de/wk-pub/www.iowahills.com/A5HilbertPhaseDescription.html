@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A5HilbertPhaseDescription.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:46 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Hilbert Phase</title>
+<style type="text/css">
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style16 {
+	color: #008000;
+	font-size: large;
+}
+</style>
+<meta content="Phase, group delay, hilbert transform filters" name="keywords" />
+<meta content="This page shows how Hilbert Phase is defined and calculated." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15">Hilbert Phase </span>&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>Hilbert Phase is a term we coined. It is a method for calculating the linearity of phase. We call it Hilbert phase because it is the 
+same method used to display the phase characteristics of a Hilbert Transform 
+filter.</p>
+<p>We have all seen the usual phase plots, and then ignored them, simply because 
+it is virtually impossible to glean any useful information from them. As a 
+result, we have been paying more attention to group delay plots which tell us 
+how linear the phase is, and how long it takes for a signal to get through the 
+device. Unfortunately however, group delay has units of time, not phase.<br />
+<br />
+Hilbert Phase shows how many degrees the phase is varying from perfect linear 
+phase, and has units of phase. <br />
+<br />
+Here is an example of a Butterworth low pass filter where we show a standard 
+phase plot and the group delay. The group delay shows us where the phase in non 
+linear, but it is difficult to ascertain much more information than that from 
+these plots.</p>
+<p>
+<img alt="ButterworthLowPass Response.png" src="Hilbert%20Phase/ButterworthLowPass%20Response.png" /></p>
+<p>Here we show this filter&#39;s unwrapped phase and draw a straight line to 
+determine it&#39;s non linearity. The difference between the straight 
+line and the unwrapped phase is the Hilbert Phase.</p>
+<p>
+<img alt="ButterworthLowPass Phase.png" height="457" src="Hilbert%20Phase/ButterworthLowPass%20Phase.png" width="672" /></p>
+<p class="style16">Calculation of Hilbert Phase</p>
+<p>We use the same method of calculation 
+that is used to display the phase characteristics of a Hilbert filter. To start, 
+we need the Laplace transform for a time delayed signal.</p>
+<p>
+<img alt="LaplaceTimeDelay.png" height="44" src="Hilbert%20Phase/LaplaceTimeDelay.png" width="221" /></p>
+<p>
+To demonstrate the use of this Laplace operator, we use a linear phase FIR 
+filter. We set &#39;-a&#39; to the filter&#39;s group delay. The resulting Hilbert Phase is 
+a flat line because this filter&#39;s phase is linear. <br />
+</p>
+<p>
+<img alt="Figure 1.png" src="Hilbert%20Phase/Figure%201.png" /></p>
+<p>In this example we use an Inverse Chebyshev low pass filter. Its group delay 
+is much less than the FIR filter shown above, so the impulse response moves back 
+in time less. The original phase is not linear and the Hilbert phase shows us 
+the amount of non linearity.</p>
+<p>
+<img alt="Fig 2.png" height="757" src="Hilbert%20Phase/Fig%202.png" width="631" /></p>
+<p>&nbsp;</p>
+<p>Another way to interpret Hilbert Phase&nbsp;is shown here. As with 
+the Laplace transform, the amount of delay used in the upper path is equivalent 
+to the filter&#39;s group delay.&nbsp; </p>
+<p>
+<img alt="Hilbert Phase Diagram.png" src="Hilbert%20Phase/Hilbert%20Phase%20Diagram.png" /></p>
+<p>
+&nbsp;</p>
+<p>
+Here are two more examples of Hilbert Phase plots. The first is a specially 
+designed 45 degree Hilbert filter. </p>
+<p>
+<img alt="Fig 4" height="330" src="Hilbert%20Phase/Fig%204.png" width="435" /></p>
+<p>This shows a typical Hilbert Phase plot for an analog band pass filter. 
+The group delay plot indicates that the phase isn&#39;t linear and the Hilbert 
+Phase plot tells us the amount of deviation from linearity in degrees.</p>
+<p>
+<img alt="ButterworthBandPass HilbertPhase.png" src="Hilbert%20Phase/ButterworthBandPass%20HilbertPhase.png" /></p>
+<p>In the Iowa Hills filter programs, we use Hilbert phase to show two distinct 
+types of phase behavior.</p>
+<p>For most filters, whether it be an opamp filter, IIR filter, RF filter, or an 
+ordinary FIR filter, the Hilbert phase shows the amount of non linearity in the 
+phase, just as in the Butterworth example above. The actual phase of the filter 
+where the Hilbert phase is zero can be anything.</p>
+<p>However, for filters such as a Differentiator or Hilbert Transform, the 
+Hilbert Phase plot does not show a deviation from linearity, but rather the 
+phase, adjusted for group delay. In other words, we show the phase results 
+directly from the transfer function after the application of the Laplace delay 
+operator.</p>
+<p>These calculations are identical except that when we are only interested in 
+nonlinearity, and not the absolute Hilbert phase value, we modify the results so 
+that the Hilbert Phase starts at zero in the filter&#39;s pass band. As an example, 
+if the filter has an inverted output, as some opamp filters have, then the 
+absolute Hilbert phase would start at 180 degrees. Since we only want to show 
+phase non linearity, we subtract out the 180 degree offset so the Hilbert phase 
+plot starts at zero.</p>
+<p>&nbsp;</p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A5HilbertPhaseDescription.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:48 GMT -->
+</html>

@@ -1,0 +1,344 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/FIRFiltersByFreqSampling.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:25 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>The Frequency Sampling Method for FIR Design</title>
+<style type="text/css">
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style9 {
+	font-size: x-large;
+	color: #008000;
+}
+.style15 {
+	font-family: "Courier New", Courier, monospace;
+}
+</style>
+<meta content="fir, frequency sampling method, example C code, over sampling" name="keywords" />
+<meta content="We show how to over sample a desired magnitude response, and set the phase properly, in order to generate FIR coefficients with an FFT." name="description" />
+</head>
+
+<body style="margin-right: 75px">
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style9">The Frequency Sampling Method 
+		for FIR Design</span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html">Home</a> </p>
+<p>This page shows how to generate an FIR filter with the 
+frequency <strong>oversampling</strong> method. The samples may be taken from a custom defined 
+magnitude response, or from a predefined filter polynomial, such as a 
+Butterworth or Chebyshev.</p>
+<p>We also show how to set the phase for a custom response. Defining the gain 
+for a custom filter is usually trivial, but the phase is less trivial because we 
+need to satisfy certain requirements for the Fourier Transform, and we typically 
+want linear phase with a specific slope for optimum FIR performance. We then 
+show how to modify the phase in order to change the filter’s group delay by 
+fractional amounts. </p>
+<p>An important aspect of this paper is our use of <strong>oversampling</strong> in the frequency 
+domain. We always sample the frequency domain at least 1024 times (a large power 
+of 2 suitable for an FFT) even though we typically want a relatively small 
+number of FIR taps (e.g. 25 taps). </p>
+<p>We don&#39;t present any rigorous mathematics here. We simply explain 
+the concepts used in this process. It is assumed the reader understands 
+the properties of FIR filters and the Fourier Transform. </p>
+<p>Please take note of our (rather clumsy) notation. First note our use of the terms NumTaps and NUMSAMPLES (from our C code). NUMSAMPLES is defined as a large 
+power of 2 suitable for an FFT, typically 1024. NumTaps is self explanatory. </p>
+<p>Also note our use of the term H(s). Sometimes we are working with predefined 
+transfer functions, such as the Butterworth polynomial, and these transfer 
+functions are written in terms of the Laplace variable &#39;s&#39;, hence our use of H(s). 
+But we also work in the discrete domain where the frequency domain notation 
+usually takes the form of F(ω). While clumsy, we always use H(s) to refer to the 
+positive frequency domain samples. </p>
+<p>In our code snippets, H(s), written as HofS, is a complex array of length 
+NUMSAMPLES / 2. HofS contains the samples from the positive frequency domain, 
+whether they were derived from a continuous polynomial transfer function, or a 
+discrete custom defined transfer function. We then use these positive frequency 
+samples to generate the negative frequency samples, and fill another array, 
+FFTArray, of length NUMSAMPLES for use in an FFT.</p>
+<p>For example C code that implements the ideas given here, see our
+<a href="A7ExampleCodePage.html">Code Kit</a>.</p>
+<p>Note: The Iowa Hills <a href="4IIRFilterPage.html">FIR Filter program</a> 
+uses this methd to generate FIR filters with a custom magnitude response, but it 
+does not allow for a custom phase response.&nbsp; </p>
+<p><strong>The Use of Over Sampling</strong></p>
+<p>Many authors discuss frequency sampling 
+as a technique for generating FIR coefficients. In most discussions, however, 
+the author prescribes sampling the frequency response N times to generate N 
+taps. </p>
+<p>While this approach is certainly valid, it will only yield a useful result if 
+the frequency response is sufficiently well behaved at the sample locations and 
+between them as well. </p>
+<p>A simple example of a poorly behaved frequency response would be one where 
+the magnitude response transitions from 1 to 0 between samples. In this case, 
+the Inverse DFT cannot possibly yield a filter with the 
+correct cutoff frequency. </p>
+<p>In general, using N frequency samples to generate an N tap filter is not a 
+good approach to take. </p>
+<p>If you are familiar with windowed FIR filters, you know 
+that we start with an ideal low pass frequency response H(ω) and perform the 
+Fourier integral as shown here. This result is documented in 
+many places.</p>
+<p>
+<img alt="WindowEquation.png" height="208" src="Fourier%20Method/WindowEquation.png" width="344" /></p>
+<p>It should be clear from calculus that this integral can be approximated with 
+a summation, and from calculus we know this summation will approach the integral 
+exactly as N, the number of summation points, approaches infinity. This summation would then, in essence, be the Discrete Fourier 
+Transform.</p>
+<p>To point, it should be clear that the correct way to approximate this 
+integral would be to use a large number of samples in our DFT, and indeed, one 
+will find that a 1024 point Inverse FFT yields the same results (to several 
+decimal places) as the exact integral. </p>
+<p>The obvious question would then be: If we are using 1024 samples 
+to generate a 32 tap filter, which part of the FFT output do we use?</p>
+<p>The answer is quite simple. If we are generating a linear phase FIR filter, 
+the output of the FFT will be symmetric about its center bin. Thus if 32 taps are 
+desired, then the center 32 FFT outputs are used. If we need 54 taps, then use 
+the center 54 FFT outputs. </p>
+<p>In other words, we simply truncate the beginning and end of the FFT output to 
+obtain the desired length. This 
+implies that the center taps are the same no matter the number of taps used, 
+and this is correct, and also the result the exact integral solution gives.</p>
+<p>Please remember that when we use the center of the FFT output, we are 
+assuming that the frequency response used for the Inverse FFT described a linear phase filter. If it 
+doesn’t, then the desired taps will not be centered in the FFT&#39;s output. An 
+example of this would be if the frequency response describes an analog filter, 
+such as a Butterworth. Then the desired taps will start at t=0, the beginning of 
+the Inverse FFT output, and as before, we simply use as many taps as desired.</p>
+<p>Also remember that the frequency response for an odd tap count filter is not 
+the same as for an even tap count filter. The H(s) for even and odd tap linear 
+phase filters have slightly different phase slopes, which will be discussed 
+below.</p>
+<p><strong>Step 1: &nbsp;Define the Transfer Function H(s)</strong></p>
+<p>H(s) may take on many forms. It may be predefined, such as a Butterworth 
+filter polynomial, or it may be a custom transfer function, where we don’t 
+explicitly define the transfer function in terms of s, but rather simply define 
+the gain and phase of the transfer function in the 
+positive frequency domain.</p>
+<p>If we are working with a predefined polynomial, such as a Butterworth, then 
+this step is essentially complete. We just need to show how to sample H(s) 
+appropriately in order to do 
+the required frequency warping. Remember that H(s) may define any type of 
+response, whether it be low pass or band pass or a differentiator.</p>
+<p>We start with the most common application for this technique, where we define 
+H(s) for a custom FIR filter. We will start with a simple windowed filter where 
+the magnitude response is trivial.</p>
+<p>
+<img alt="Window.png" height="127" src="Fourier%20Method/Window.png" width="229" /></p>
+<p>For the sake of this paper, we sample the positive frequency domain 
+NUMSAMPLES / 2 times. Ω<sub>c</sub> is defined as a fraction of Pi and with a 
+range of 0.0 &lt; Ω<sub>c</sub> &lt; 1.0. Then the magnitude of H(s) for this example is 1 for the 
+samples 0&lt;= n &lt;= Ω<sub>c</sub>·NUMSAMPLES/2 and 0 outside this range.</p>
+<p>The phase of H(s) is only slightly more complicated in that it depends on the 
+number of taps we intend to use. For odd tap counts, the phase changes at the rate of -π per sample. For even tap 
+counts, the phase changes at -(N-1)/N·π per sample where N is NUMSAMPLES.</p>
+<p>This code snippet shows how we set the phase for a linear phase low pass  
+filter. The WinMag array was 
+filled in a previous function call and contains the desired magnitude for H(s). 
+The HofS array is complex valued.</p>
+<p><span class="style15">// Set the Radians per Sample</span><br class="style15" />
+<span class="style15">RadPerSample = -M_PI * (NUMSAMPLES - 1.0)/NUMSAMPLES; &nbsp;// 
+Even tap count.</span><br class="style15" />
+<span class="style15">if(NumTaps % 2 == 1) RadPerSample = -M_PI;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+// Odd tap count.</span><br class="style15" />
+&nbsp;<br class="style15" />
+<span class="style15">// Fill the H(s) array. This is for a low pass response.
+</span><br class="style15" />
+<span style="font-family: &quot;Courier New&quot;; mso-fareast-font-family: &quot;Times New Roman&quot;; color: black; mso-ansi-language: EN-US; mso-fareast-language: EN-US; mso-bidi-language: AR-SA">
+for(j=0; j&lt;NUMSAMPLES/2; j++)</span><NUMSAMPLES/2; j++)<br /><span class="style15">&nbsp;<br />
+&nbsp;{</span><br class="style15" />
+<span class="style15">&nbsp; Arg = RadPerSample * (double)j;</span><br class="style15" />
+<span class="style15">&nbsp; HofS[j] = WinMag[j] * ComplexD( cos(Arg), sin(Arg) 
+);</span><br class="style15" />
+<span class="style15">&nbsp;}</span>&nbsp;</p>
+<p>This low pass filter is now fully defined in the positive frequency domain. 
+The&nbsp; magnitude response for this example is trivial, but it can take on any 
+shape. The phase however, will be as shown here for a low pass filter, no matter 
+the shape of magnitude response. The details on setting the phase for other 
+filter types, such as a high pass filter, are given in our
+<a href="Fourier%20Method/SamplingCode.txt">example code</a>.</p>
+<p>&nbsp;</p>
+<p><strong>H(s) defined by a polynomial</strong><br />
+It is sometimes desirable to obtain an FIR response for an analog polynomial, 
+such as a Butterworth filter. Then both the magnitude and phase are 
+predefined.</p>
+<p>The only problem then is to properly define the frequencies used to sample 
+the polynomial. We have two problems to solve. The first is that the polynomial 
+is defined for frequencies out to infinity and we need to compress this range 
+down to Pi for the sake of Discrete Fourier Transform (warp the frequencies). The second is that filter 
+polynomials, such as the Butterworth, are defined to have a 3 dB cutoff at 1 Hz, 
+and we need to move this to our desired cutoff frequency.</p>
+<p>This code snippet shows how this is done, where 
+OmegaC is the desired 3 dB frequency 0.0 &lt;Ω<sub>c</sub> &lt; 1.0 </p>
+<p><span class="style15">// Fill SimOmega with the frequencies used to 
+evaluate the polynomial.</span><br class="style15" />
+<span class="style15">Omega0 = 1.0 / tan(OmegaC * M_PI_2);</span><br class="style15" />
+<span class="style15">for(j=0; j&lt;NUMSAMPLES/2; j++)&nbsp;<br />
+&nbsp;{</span><br class="style15" />
+<span class="style15">&nbsp; SimOmega[j] = Omega0 * tan(M_PI * (double)j / NUMSAMPLES);</span><br class="style15" />
+<span class="style15">&nbsp;}</span><br class="style15" />
+&nbsp;<br class="style15" />
+<span class="style15">// Evaluate the 2nd order sections in a manner similar to 
+this.</span><br class="style15" />
+<span class="style15">// NSections is the number of 2nd order sections.</span><br class="style15" />
+<span class="style15">// N2, N1, N0, D2, D1, D0 are the 2nd order polynomial 
+coefficients.</span><span style="font-family: &quot;Courier New&quot;; color: black"><br />
+for(j=0; j&lt;NUMSAMPLES/2; j++)</span><NUMSAMPLES/2; j++)<br /><span class="style15">&nbsp;<br />
+&nbsp;{</span><br class="style15" />
+<span class="style15">&nbsp; s = ComplexD(0.0, SimOmega[j]); </span>
+<br class="style15" />
+<span class="style15">&nbsp; s_sq = s * s;</span><br class="style15" />
+&nbsp;<br class="style15" />
+<span class="style15">&nbsp; H = ComplexD(1.0,0.0);</span><br class="style15" />
+<span class="style15">&nbsp; for(n=0; n</span><NSections; n++) <br /><span class="style15">&nbsp;&nbsp;
+<br />
+&nbsp;&nbsp; {</span><br class="style15" />
+<span class="style15">&nbsp;&nbsp;&nbsp; Numerator&nbsp;&nbsp; = N2[n] * s_sq + 
+N1[n] * s + N0[n];</span><br class="style15" />
+<span class="style15">&nbsp;&nbsp;&nbsp; Denominator = D2[n] * s_sq + D1[n] * s 
++ D0[n];</span><br class="style15" />
+<span class="style15">&nbsp;&nbsp;&nbsp; H = H * Numerator / Denominator;</span><br class="style15" />
+<span class="style15">&nbsp;&nbsp; }</span><br class="style15" />
+<span class="style15">&nbsp; HofS[j] = H;</span><br class="style15" />
+<span class="style15">&nbsp;}</span></p>
+<p><strong>Step 2: &nbsp;Create a NUMSAMPLES Complex Array for use in an FFT</strong></p>
+<p>Let us start by reminding the reader that the value of H(s) at the negative 
+frequencies is the complex conjugate of the positive frequency values. With this 
+in mind, we want to point out some implications of this for filter design. Here 
+we show the bin locations for an 8 point FFT</p>
+<p>
+<img alt="BinFrequencies.png" height="123" src="Fourier%20Method/BinFrequencies.png" width="274" /></p>
+<p>The DC term, 0, and the Nyquist Frequency term, N/2, do not have 
+a conjugate match. As such, these two terms must be real valued. Let us discuss some valid values for these 
+two terms in the context of FIR 
+filter design.</p>
+<p>For low pass filters, the 0 bin represents the DC gain of the filter. Thus 
+for unity gain filters, the only valid values for bin zero are 1, or -1 for 
+inverting filters. The Nyquist bin represents the gain of the analog 
+filter at ±∞ so it must be 0. These two bins may not contain a complex value.</p>
+<p>For a high pass filter, the DC gain is zero, so bin 0 must be zero. The 
+Nyquist bin represents the gain of the analog filter at ±∞ so the only 
+valid values for this bin are 1, or -1 for inverting filters (assuming unity 
+gain).</p>
+<p>For band pass filters, both the DC and Nyquist values are 0.</p>
+<p>For Notch filters with unity gain, the DC and Nyquist bins must be either 1 or 
+-1, but need not be the same.</p>
+<p>These requirements can also be thought of as restrictions on the phase at DC 
+and Nyquist. For low pass and notch filters, the phase must be either 0 or 180° 
+at DC, while for high pass and notch filters, the phase must be either 0 or 180° 
+at Nyquist.</p>
+<p>Band pass filters are unique in this respect. Since the magnitude of a band 
+pass filter equals 0 at both DC and Nyquist, the phase at these two frequencies 
+is ignored, but this allows us to set the phase in the bins adjacent to DC and Nyquist to any value 
+without presenting a phase discontinuity to the DFT. This means we 
+can give the phase curve in a band pass filter any offset we desire, which isn’t 
+true for low pass, high pass, and notch filters for the reasons given in the 
+preceding paragraph. While a band pass filter&#39;s phase may have any absolute 
+value, the slope of the phase curve is not arbitrary, and must be set as for 
+other FIR filters in order to maintain optimal 
+performance.</p>
+<p><strong>Step 3: &nbsp;Generate the FIR coefficients by doing an Inverse FFT</strong></p>
+<p>In the preceding step, we generated an input array for the FFT of length 
+NUMSAMPLES (a large power of 2) which will generate NUMSAMPLES of FIR 
+coefficients. If the phase of H(s) was set to change at the rate of -π per 
+sample for odd tap count filters, and at -(N-1)/N·π per sample for even tap 
+count filters, then the FIR taps are located in the center FFT bins.</p>
+<p>This code snippet shows the details. The integer variable StartT is the location 
+of the first tap. Note this integer division NumTaps/2 handles the case for even 
+and odd tap counts appropriately. </p>
+<p>Also note that the variable FFTArray[] is a complex array that was used as 
+both the input and output of the FFT. We use the real part of the return value 
+because the imaginary part is essentially zero (the result of setting the negative frequency 
+values to the conjugate of the positive frequency values). Since our FFT doesn’t scale 
+the output of an inverse FFT, which is typical of most FFTs, we must scale the 
+coefficients by NUMSAMPLES, the length of the FFT.</p>
+<p><span class="style15">// This is where the FIR taps are located in the 
+FFT’s return.</span><br class="style15" />
+<span class="style15">StartT = NUMSAMPLES/2 - NumTaps/2;</span><span style="color: black"><br class="style15" />
+</span><span class="style15" style="color: black">for(t=0; t&lt;NumTaps; 
+t++)<br />
+&nbsp;{<br />
+&nbsp; FirCoeff[t] = FFTArray[t+StartT].real() / (double)NUMSAMPLES;<br />
+&nbsp;}</span></p>
+<p>If the input to the FFT represented an analog filter, such as a Butterworth, 
+then the FIR taps are located at the beginning of the FFTArray ( at t=0) and we 
+would set 
+StartT=0 in this code.</p>
+<p><strong>Step 4: &nbsp;Window the FIR Coefficients</strong></p>
+<p>It is not the purpose of this paper to explain the windowing techniques 
+typically used for FIR filters, which are typically symmetric about their center tap. 
+We do however want to show a windowing technique for a filter derived from an 
+analog transfer function.</p>
+<p>This plot shows a typical impulse response and window for a linear phase FIR 
+filter. Both the impulse response and the window are symmetric about the center.</p>
+<p>
+<img alt="SymmetricWindow.png" height="210" src="Fourier%20Method/SymmetricWindow.png" width="455" /></p>
+<p>This plot shows a typical impulse response generated by an analog filter 
+polynomial, such as the Butterworth. These impulse responses are not symmetric 
+and are best windowed with something similar to a half cosine window W(n) = 
+cos(n/NumTaps · π/2). It isn’t complicated, but this window is quite effective 
+and usually sufficient for these analog style impulse responses.</p>
+<p>
+<img alt="AnalogWindow.png" height="210" src="Fourier%20Method/AnalogWindow.png" width="455" /></p>
+<p><strong>Step 5: &nbsp;Adjust the Group Delay as Needed </strong></p>
+<p>Occasionally we need to adjust the filter’s group delay as a way to align 
+signals. A filter’s group delay can typically be changed by ± TapCount/20 
+without seriously degrading the filter’s performance.</p>
+<p>There are many ways to adjust the filter’s delay time. Here are three ways, 
+which <strong>are not recommended</strong>.</p>
+<ol>
+	<li>After H(s) is formed in step 1, whether it be a custom transfer function or the 
+samples from a filter polynomial, simply multiply H(s) by the Laplacian time 
+delay operator e<sup>-a·s</sup>. The value of ‘a‘ is in terms of fraction of samples.
+	</li>
+	<li>In step 3, when we are extracting the coefficients from the output of the 
+FFT, simply move the starting bin for the coefficients by ±1 to affect a delay 
+of ±1. This will not allow us to do a fractional delay change, and can only be 
+used with a linear phase filters where the impulse response is centered in the 
+FFT’s output, so this isn’t a particularly useful method.</li>
+	<li>If we are generating the FIR filter coefficients with a formula similar 
+	to:<br />
+	h(n) = 2·Ω<sub>c</sub>·sinc(2·Ω<sub>c</sub>·π·n)<br />
+	then a fractional 
+delay can be introduced by adding a fraction to n within the sinc function.</li>
+</ol>
+<p>The problem with these three methods is that they generate an impulse 
+response which is not symmetric about its center before we have had a chance to 
+apply a window, such as a Kaiser. This is a significant problem without a good 
+solution because there isn’t a good way to generate an effective non-symmetric 
+window. To avoid this problem, we use the following procedure as a final step to 
+adjust a filter’s group delay.<br />
+</p>
+<ol>
+	<li>After the coefficients have been generated and windowed appropriately, take an 
+FFT of the taps.</li>
+	<li>Multiply the output of the FFT by the Laplacian time delay operator e<sup>-a·s</sup> where 
+‘s’ is the FFT’s bin frequency and the value of ‘a’ represents the fraction of a 
+sample. In other words, ‘a’ is not in terms of the sampling frequency. <br />
+	</li>
+	<li>Do an Inverse FFT. </li>
+</ol>
+<p>This simple process allows you to make fractional group delay changes to any 
+type of FIR impulse response.</p>
+<p>&nbsp;</p>
+<p>This plot shows an example of of an FIR filter generated with this method.
+<a href="Fourier%20Method/60TapInvChebyLPF.txt">8 Pole Inv Cheby Coefficients.</a></p>
+<p>
+<img alt="InvChebyExample.png" height="319" src="Fourier%20Method/InvChebyExample.png" width="563" /></p>
+<p>For example C code that implements the ideas given here, see our
+<a href="A7ExampleCodePage.html">Code Kit</a>.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/FIRFiltersByFreqSampling.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:26 GMT -->
+</html>

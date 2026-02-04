@@ -1,0 +1,163 @@
+
+/*
+ Set 29, 2014
+ From: http://www.iowahills.com/A7ExampleCodePage.html
+ If you find a problem with this code, please leave us a note on:
+ http://www.iowahills.com/feedbackcomments.html
+
+ There are 2 functions given here. They implement an IIR filter as an Nth order
+ polynomial in either Form 1 or Form 2. The intent here is to show a basic algorithm,
+ not to give a working program.
+
+ Remember that these filters have delay, so you need to run the code for M points
+ longer than the number of data points to be filtered in order to get the entire
+ signal through the filter. A reasonable value for M is twice the group delay value.
+
+
+An Example.
+These are the Nth order coefficients for a 4 pole Inverse Chebyshev.
+They came from the Iowa Hills IIR program.
+
+Nth Order Coefficients
+Numerator
+b4  9.733517399250140E-3
+b3  1.871580508766260E-2
+b2  2.484970675674230E-2
+b1  1.871580508766260E-2
+b0  9.733517399250140E-3
+
+Denominator
+a4  1.852704707109540E-1
+a3  -1.044283378662510E0
+a2  2.298169395109720E0
+a1  -2.357408135427590E0
+a0  1.000000000000000E0
+
+Fill the coefficient arrays.
+NumCoeff[4] = 9.733517399250140E-3;
+NumCoeff[3] = 1.871580508766260E-2;
+NumCoeff[2] = 2.484970675674230E-2;
+NumCoeff[1] = 1.871580508766260E-2;
+NumCoeff[0] = 9.733517399250140E-3;
+
+DenomCoeff[4] = 1.852704707109540E-1;
+DenomCoeff[3] = -1.044283378662510E0;
+DenomCoeff[2] = 2.298169395109720E0;
+DenomCoeff[1] = -2.357408135427590E0;
+DenomCoeff[0] = 1.000000000000000E0;
+
+N = 4; This is the degree of the polynomial.
+
+
+Then fill a Signal array with random numbers from -1  to 1.
+This particular filter has a nominal group delay of 4 so
+we set NumSigPts to at least 1000 + 2*4
+
+double Signal[1100], FilteredSignal[1100];
+for(j=0; j<1000; j++)Signal[j] =  (double)random(2000)/1000.0 - 1.0;
+RunIIRPoly(Signal, FilteredSignal, 1008);
+
+
+
+In the code below, we simply set all the array sizes to 100 so that the
+code will work with any size filter. IIR filters can't have a degree of much more
+than 40. The alternative would be to use malloc for all the arrays.
+
+Both of the functions given here assume N and the 2 Coeff arrays are globals.
+N is the degree of the polynomial.
+
+This first function implements a Form 1 Nth Order Poly
+It uses 2 sets of shift registers, RegX on the input side and RegY on the output side.
+CenterTap is the point between the two branches.
+*/
+
+#define REG_SIZE 100
+int N;
+double DenomCoeff[REG_SIZE], NumCoeff[REG_SIZE];
+
+
+void RunIIRPolyForm1( double *Signal, double *FilteredSignal, int NumSigPts)
+{
+  int j, k;
+  double RegX[REG_SIZE], RegY[REG_SIZE], CenterTap;
+
+  for(j=0; j<REG_SIZE; j++)RegX[j] = RegY[j]= 0.0;  // Init the delay registers.
+/*
+  for(j=0; j<NumSigPts; j++)
+   {
+    // Shift the register values.
+    for(k=N; k>0; k--)RegX[k] = RegX[k-1];
+    for(k=N; k>0; k--)RegY[k] = RegY[k-1];
+
+    // The numerator
+    CenterTap = 0.0;
+    RegX[0] = Signal[j];
+    for(k=0; k<=N; k++)
+     {
+      CenterTap += NumCoeff[k] * RegX[k];
+     }
+
+    // The denominator
+    RegY[0] = CenterTap * DenomCoeff[0];
+    for(k=1; k<=N; k++)
+     {
+      RegY[0] -= DenomCoeff[k] * RegY[k];
+     }
+    FilteredSignal[j] = RegY[0];
+   }
+*/
+
+ // This is equivalent to the code above.
+ // This code applies to a flow chart that combines the center adders.
+ for(j=0; j<NumSigPts; j++)
+  {
+   // Shift the register values.
+   for(k=N; k>0; k--)RegX[k] = RegX[k-1];
+   for(k=N; k>0; k--)RegY[k] = RegY[k-1];
+
+   RegX[0] = Signal[j];
+   CenterTap = NumCoeff[0] * RegX[0];
+   for(k=1; k<=N; k++)
+    {
+     CenterTap += NumCoeff[k] * RegX[k] - DenomCoeff[k] * RegY[k];
+    }
+   RegY[0] = CenterTap * DenomCoeff[0];  // DenomCoeff[0] should = 1
+   FilteredSignal[j] = RegY[0];
+  }
+}
+
+//---------------------------------------------------------------------------
+
+
+// This function implements a Form 2 Nth Order Poly
+// It uses one set of shift registers Reg[] in the center.
+void RunIIRPolyForm2( double *Signal, double *FilteredSignal, int NumSigPts)
+{
+  int j, k;
+  double y;
+  double Reg[REG_SIZE];
+
+  for(j=0; j<REG_SIZE; j++)Reg[j] = 0.0;  // Init the delay registers.
+
+  for(j=0; j<NumSigPts; j++)
+   {
+    // Shift the register values.
+    for(k=N; k>0; k--)Reg[k] = Reg[k-1];
+
+    // The denominator
+    Reg[0] = Signal[j];
+    for(k=1; k<=N; k++)
+     {
+      Reg[0] -= DenomCoeff[k] * Reg[k];
+     }
+
+    // The numerator
+    y = 0;
+    for(k=0; k<=N; k++)
+     {
+      y += NumCoeff[k] * Reg[k];
+     }
+    
+    FilteredSignal[j] = y;
+   }
+}

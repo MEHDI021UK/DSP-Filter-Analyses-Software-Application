@@ -1,0 +1,151 @@
+
+// October 18, 2014
+// From: http://www.iowahills.com/A7ExampleCodePage.html
+// If you find a problem with this code, please leave us a note on:
+// http://www.iowahills.com/feedbackcomments.html
+
+/*
+The intent here is to show techniques for calculating the frequency
+response of an FIR filter, not to provide ready to use code.
+
+There are 3 functions given here. The first is a DFT, which calculates the frequency
+response of an FIR filter for 0.0 < Omega < 1.0
+
+The second function is a DFT which calculates the FIR response at one frequency.
+
+The third function is the Goertzel algorithm, which also calculates the FIR response
+at a single frequency, but unlike a DFT, it provides no phase information.
+ 
+See these links for more information on Goertzel.
+http://en.wikipedia.org/wiki/Goertzel_algorithm
+http://www.embedded.com/design/real-world-applications/4401754/Single-tone-detection-with-the-Goertzel-algorithm
+http://netwerkt.wordpress.com/2011/08/25/goertzel-filter/
+
+*/
+
+
+// FIRFreqResponse is a DFT used to calculate the frequency response of an FIR filter.
+// The only reason to use this instead of an FFT is that we can evaluate the filter at
+// the frequencies of our choosing, as opposed to the FFT's predetermined bin frequencies.
+// It calculates the response at iNUM_PLOT_PTS frequencies. Normally, 0 <= Omega < 1
+// It fills FFTOutput[] which gets used in the plotting routines.
+
+// This function gets called hundreds of times. To save time, the twiddle factors are stored.
+// They only need to be calculated on the first call, or when MaxPlotOmega changes.
+// MaxPlotOmega is usually equal to 1.0, but can be any value.
+
+// ComplexD is a complex double.
+// TwiddleReal and TwiddleImag  are global arrays of doubles.
+// FFTOutput  is a complex array used to store the response.
+
+#define iNUM_PLOT_PTS 1024    // These can be any convenient value.
+#define dNUM_PLOT_PTS 1024.0
+
+void FIRFreqResponse(double *Samples, int N) // Samples[] = FirCoeff[]   N = NumTaps
+{
+ int j, k;
+ double Arg, Temp, zReal, zImag;
+ double SumReal, SumImag;         // Real and Imag parts of the Sum.
+ static double PrevMaxPlotOmega = -1000.0;
+
+ // Use precalculated twiddle factors
+ if(PrevMaxPlotOmega != MaxPlotOmega)
+  {
+   PrevMaxPlotOmega = MaxPlotOmega;
+   for(j=0; j<iNUM_PLOT_PTS; j++)
+    {
+     Arg = M_PI * (double)j / dNUM_PLOT_PTS * MaxPlotOmega;
+     TwiddleReal[j] = cos(Arg);   // These 2 arrays are globals (static).
+     TwiddleImag[j] = -sin(Arg);
+    }
+  }
+
+ for(j=0; j<iNUM_PLOT_PTS; j++)
+  {
+   zReal = 1.0;
+   zImag = 0.0;
+
+   SumReal = 0.0;
+   SumImag = 0.0;
+   for(k=0; k<N; k++)
+	{
+     SumReal += Samples[k] * zReal;
+     SumImag += Samples[k] * zImag;
+
+     // This takes z to the nth power recusively.  z = ComplexD(cos(Arg), -sin(Arg))
+     Temp  = zReal * TwiddleReal[j] - zImag * TwiddleImag[j];  // Use a temp because we still need zReal.
+     zImag = zReal * TwiddleImag[j] + zImag * TwiddleReal[j];
+     zReal = Temp;
+	}
+
+   FFTOutput[j] = ComplexD(SumReal, SumImag);
+   if(AbsVal(FFTOutput[j]) < 1.0E-12)FFTOutput[j] = ComplexD(1.0E-12, 0.0); // To avoid underflow when we calc dB.
+  }
+}
+
+//---------------------------------------------------------------------------
+
+// This is a single frequency DFT.
+// It evaluates the response of an FIR filter at Omega.
+// Samples[] = FirCoeff[]  N = NumTaps  0.0 <= Omega <= 1.0
+double FreqResponseAtOmega(double *Samples, int N, double Omega)
+{
+ int j;
+ double Temp, zReal, zImag;        // z = ComplexD(cos(Arg), -sin(Arg))
+ double SumReal, SumImag;          // Real and Imag parts of the final sum.
+ double TwiddleReal, TwiddleImag;  // Twiddle Factors
+
+ TwiddleReal = cos(Omega * M_PI);
+ TwiddleImag = -sin(Omega * M_PI);
+ zReal = 1.0;
+ zImag = 0.0;
+ SumReal = 0.0;
+ SumImag = 0.0;
+
+ for(j=0; j<N; j++)
+  {
+   SumReal += Samples[j] * zReal;
+   SumImag += Samples[j] * zImag;
+
+   // This takes z to the nth power recusively.   z = ComplexD(cos(Arg), -sin(Arg))
+   Temp  = zReal * TwiddleReal - zImag * TwiddleImag;  // Use a temp because we stillneed zReal.
+   zImag = zReal * TwiddleImag + zImag * TwiddleReal;
+   zReal = Temp;
+  }
+
+ // ComplexD(SumReal, SumImag) This is the filter's complex valued response at Omega.
+
+ if(AbsVal(ComplexD(SumReal, SumImag)) < 1.0E-12)return(-240.0);
+ else return(dB(ComplexD(SumReal, SumImag)));
+
+}
+
+//---------------------------------------------------------------------------
+
+// Goertzel is essentially a single frequency DFT, but there is no phase information.
+// Because it is so much simpler, and faster, it is typically used instead of a DFT or FFT
+// to find a single tone embedded in a signal. A DTMF tone for example.
+// To evaluate the magnitude response of an FIR filter at Omega, set
+// Samples[] = FirCoeff[]   N = NumTaps  0.0 <= Omega <= 1.0
+double Goertzel(double *Samples, int N, double Omega)
+{
+ int j;
+ double Reg[3];        // 3 shift registers
+ double CosVal, Mag;
+ Reg[1] = Reg[2] = 0.0;
+
+ CosVal = 2.0 * cos(M_PI * Omega );
+ for (j=0; j<N; j++)
+  {
+   Reg[0] = Samples[j] + CosVal * Reg[1] - Reg[2];
+   Reg[2] = Reg[1];  // Shift the values.
+   Reg[1] = Reg[0];
+  }
+ Mag = Reg[2] * Reg[2] + Reg[1] * Reg[1] - CosVal * Reg[1] * Reg[2];
+
+ if(Mag > 0.0)Mag = sqrt(Mag);
+ else Mag = 1.0E-12;   // To prevent a problem in dB()
+
+ return(Mag);
+}
+

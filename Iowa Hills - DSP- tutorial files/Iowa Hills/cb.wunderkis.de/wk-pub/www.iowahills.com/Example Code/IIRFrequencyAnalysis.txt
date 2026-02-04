@@ -1,0 +1,46 @@
+// October 7, 2013
+// From: http://www.iowahills.com/A7ExampleCodePage.html
+// If you find a problem with this code, please leave us a note on:
+// http://www.iowahills.com/feedbackcomments.html
+
+/*
+This code calculates the frequency response of an IIR filter.
+
+It uses the second order IIR coeficients stored in IIR.a2[], IIR.a1[] , IIR.a0[]
+and IIR.b2[] , IIR.b1[] , IIR.b0[]. (section numbers start at 0)
+
+ComplexD is a complex double.  iNUMSAMPLES=1024  dNUMSAMPLES=1024.0
+The result was stored in the global complex array HofZ[].
+
+Note where we test the denominator for zero. This can happen if the filter has a pole
+on the unit circle, but if this happens, a properly designed filter will also have a
+zero at the same frequency so the numerator will equal zero as well.
+*/
+
+void ZPolyFreqResponse(void)
+{
+ int j, n;
+ double Arg;
+ ComplexD z1, z2, Numerator, Denominator;
+
+ for(j=0; j<iNUMSAMPLES; j++)
+ {
+  Arg = M_PI * (double)j / dNUMSAMPLES;
+  z1 = ComplexD(cos(Arg), -sin(Arg));
+  z2 = z1 * z1;
+
+  Numerator = ComplexD(1.0,0.0);
+  Denominator = ComplexD(1.0,0.0);
+  for(n=0; n<Filt.NumSections; n++) // The transfer function as defined in Oppenheim p 213
+   {
+	Numerator *= IIR.b0[n] + IIR.b1[n] * z1 + IIR.b2[n] * z2;
+	Denominator *= IIR.a0[n] + IIR.a1[n] * z1 + IIR.a2[n] * z2;
+   }
+  if(Denominator == ComplexD(0.0, 0.0) )Denominator = ComplexD(1.0E-12, 0.0);
+  HofZ[j] = Numerator / Denominator;
+  if(AbsVal(HofZ[j]) < 1.0E-12)HofZ[j] = ComplexD(1.0E-12, 0.0); // To avoid underflow when we calc dB.
+ }
+
+}
+
+//---------------------------------------------------------------------------

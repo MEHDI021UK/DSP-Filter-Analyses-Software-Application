@@ -1,0 +1,238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A4IIRBilinearTransform.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:21 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Bilinear Transform Design Method for IIR Filters</title>
+<style type="text/css">
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style16 {
+	color: #008000;
+	font-size: large;
+}
+.style17 {
+	font-family: "Times New Roman";
+}
+.style18 {
+	font-family: Arial;
+}
+</style>
+<meta content="IIR filter, bilinear transform, c code" name="keywords" />
+<meta content="We derive the design equations for IIR filters using the bilinear transform. Equations for low pass, high pass, band pass, and notch filters are given, as well as the C code." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15">IIR Filter Design</span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p class="style16">IIR Filter Design Using the Bilinear Transform</p>
+<p>This page derives the equations used to generate IIR filter coefficients for 
+low pass, high pass, band pass, and notch filters. <br />
+<br />
+This algorithm 
+generates second order IIR filter coefficients, not Nth order coefficients. 
+Direct computation of second order coefficients is preferred for three reasons. </p>
+<p>First, we need 2nd order coefficients to implement biquad sections, the 
+preferred, and only practical way to implement an IIR filter. </p>
+<p>Second, this approach allows us to use s domain properties, such as the 
+damping coefficient zeta, and the zero locations on the imaginary axis, to 
+properly order the biquad sections. Proper ordering, and proper grouping of the 
+poles and zeros, is critical for numerical reasons. </p>
+<p>Third, since we don&#39;t start with an Nth order polynomial, we don&#39;t need a 
+root solver to get the biquad coefficients we need. This is quite nice for most 
+applications.</p>
+<p>This method 
+does however, generate 4th order terms for band pass and notch filters, but 4th 
+order roots are easy to obtain.</p>
+<p>The source code for this algorithm is given in part
+<a href="IIR%20Algorithm/BilinearCode.txt">here</a>. The entire algorithm, which 
+includes the necessary 4th order root solver is given in our
+<a href="A7ExampleCodePage.html">Code Kit for IIR and FIR Filters</a>.</p>
+<p>&nbsp;</p>
+<p class="style16">The Bilinear Transform Design Equations</p>
+<p><img alt="" src="IIR%20Algorithm/Figure1.png" /></p>
+<p>We start with H(s), redefine the variable s using the bilinear transform, and 
+do the algebra. Our goal is to form H(z) as given above and pick off the various coefficients 
+for use in the IIR filter.</p>
+<p class="style16">Low Pass Filter Equations</p>
+<p><img alt="" src="IIR%20Algorithm/Figure2.png" /></p>
+<p>These 2 equations are the desired results, where we have set a0 = 1. Now 
+all that is needed is to plug in the A’s, B’s .. F’s from the original H(s). 
+<br />
+<br />
+The 
+value of T is determined by Omega, the desired cutoff frequency for the IIR 
+filter, which is in terms of Nyquist. For example, if the sampling frequency Fs 
+is 20 kHz, and the desired corner frequency is 2.0 kHz, then 
+<span class="style18">Ω</span> = 0.2.&nbsp; (2kHz&nbsp; /&nbsp; (Fs/2)&nbsp; = 0.2)<br />
+<br />
+H(z) reduces to the following for all pole filters. </p>
+<p><img alt="" src="IIR%20Algorithm/Figure3.png" /><br />
+</p>
+<p>When doing low pass and high pass filters, we get a 2nd order section in H(z) 
+for each 2nd order section in H(s). You will see however that band pass and notch filters generate a forth order section in H(z) for each 
+2nd order low pass term of H(s). <br />
+<br />
+If working with odd order polynomials, which have 1 pole sections, do not make 
+the mistake of assuming that the 2nd order H(z) reduces to the 1st order H(z) 
+because A = D = 0, it does not. If A and D are set to zero in the 2nd order 
+H(z), the filter will work correctly, but you will have implemented a single 
+pole in a 2nd order section. Use the 1 pole H(z) equation for the odd pole.</p>
+<p><span class="style15"><strong>Pole Ordering</strong></span><br />
+An important aspect to filter design, whether digital or analog, is to 
+place the 2nd order sections in the correct order.<br />
+<br />
+In the s domain, a 2nd order equation is routinely written as:<br />
+H(s) = s<sup>2 </sup>+ 2ζω s + ω<sup>2</sup>&nbsp; where ζ is referred to as the 
+damping factor.<br />
+<br />
+As an example, here are the 2nd order sections for a 6 pole Butterworth. In this 
+case, ω = 1 for all three.<br />
+s<sup>2</sup> + 0.5176380902 s + 1.0&nbsp;&nbsp;&nbsp; ζ = 0.258&nbsp;&nbsp;&nbsp;
+<br />
+s<sup>2</sup> + 1.4142135624 s + 1.0&nbsp;&nbsp;&nbsp; ζ = 0.707<br />
+s<sup>2</sup> + 1.9318516526 s + 1.0&nbsp;&nbsp;&nbsp; ζ = 0.965<br />
+<br />
+In this plot, we show the frequency response for these sections and their pole 
+locations on the s plane.</p>
+<p>
+<img alt="ButterworthZetas.png" src="IIR%20Algorithm/ButterworthZetas.png" /></p>
+<p>If building an opamp filter, we order the sections by zeta, 
+placing the section with ζ = 0.965 first as a way to minimize the voltage swing 
+of the succeeding sections. This is simply good design practice because it 
+reduces the chances for the first stage to saturate.<br />
+<br />
+Similarly, when designing an IIR filter to be used on a fixed point processor, 
+we want to keep the math values minimized so we can prevent register overflow. 
+To do this, we order the sections by zeta, using the section with the largest 
+zeta first.<br />
+<br />
+If the pole count is odd, the odd pole resides on the real axis, so its zeta is 
+essentially 1.0, and should be used first.</p>
+<p><span class="style15"><strong>Zero Ordering</strong></span><br />
+The Inverse Chebyshev and Elliptic also have s plane zeros. From a 
+mathematical perspective, the poles and zeros can be grouped together in the 2nd 
+order sections in any manner desired, but we want to arrange the zeros in a way 
+that minimizes the peak math values. This can be done by ordering the zeros so 
+that the inner most zero is used first.<br />
+<br />
+This is a pole zero plot for a 6 pole Inverse Chebyshev. </p>
+<p>
+<img alt="InvChebyPoleZeroPlot.png" src="IIR%20Algorithm/InvChebyPoleZeroPlot.png" /></p>
+<p>
+Here is an example of how incorrect pole zero ordering can affect the peak math 
+values generated by the filter.</p>
+<table>
+	<tr>
+		<td colspan="2"><strong>Peak Math Values for a 10 Pole Inv Chebyshev Low 
+		Pass</strong></td>
+	</tr>
+	<tr>
+		<td style="width: 130px">Correct Ordering</td>
+		<td>127.0</td>
+	</tr>
+	<tr>
+		<td style="width: 130px">Zeros Reversed</td>
+		<td>198.8</td>
+	</tr>
+	<tr>
+		<td style="width: 130px">Poles Reversed</td>
+		<td>513.0</td>
+	</tr>
+	<tr>
+		<td style="width: 130px">Both Reversed</td>
+		<td>760.0</td>
+	</tr>
+</table>
+<p>&nbsp;</p>
+<p>The following gives the derivations for high pass, band pass, and notch filters. </p>
+<p>&nbsp;</p>
+<p><span class="style16">High Pass Filter Equations</span><br />
+In the s domain, to convert a low pass to a high pass, s becomes 1/s.</p>
+<p><img alt="" src="IIR%20Algorithm/Figure4.png" /></p>
+<p>&nbsp;</p>
+<p><span class="style16">Band Pass Filter Equations</span><br />
+You will notice that in this derivation, we set <span class="style17">ω</span> = 
+1. We do this because H(s) is normalized 
+to <span class="style17">ω </span>= 1 and we need to maintain that. Also, because of the frequency warping 
+occurring here, the definition for Q used here (Q = <span class="style17">ω / BW)</span> 
+works very poorly in the z domain, so we correct this Q calculation with the 
+code given at the bottom of the page. </p>
+<p><img alt="" src="IIR%20Algorithm/Figure5.png" /></p>
+<p>Rather than show the expanded view of this equation, we simply give the 10 
+coefficients. As noted above, this 4th order H(z) would almost certainly need to 
+be factored if implemented in fixed point.</p>
+<p><img alt="" height="563" src="IIR%20Algorithm/Figure6.png" width="490" /></p>
+<p class="style16">Notch Filter Equations</p>
+<p><img alt="" src="IIR%20Algorithm/Figure7.png" /></p>
+<p><img alt="" height="560" src="IIR%20Algorithm/Figure8.png" width="476" /></p>
+<p>&nbsp;</p>
+<p><span class="style16">Q for Bandpass and Notch Filters<br />
+</span>Because of the frequency warping that occurs when converting the s domain 
+polynomials to the z domain, the usual definition for the Q of a bandpass or 
+notch filter must be modified. Here is the c code we use to correct Q. We 
+derived this by plotting the bandwidth error as a function of OmegaC and doing a 
+curve fit. <br />
+<br />
+Without this correction, the resulting filter bandwidth is a strong function of 
+the filter&#39;s center frequency. The filter will be wider than desired at low 
+center frequencies, and much narrower than desired at high center frequencies.<br />
+<br />
+The bandwidth, BW, like OmegaC, is in terms of Nyquist. <br />
+<br />
+Q = 1.0 + OmegaC;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 
+OmegaC max = 1.0<br />
+if(Q &gt; 1.95)Q = 1.95;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Q must be &lt; 2 
+for the next line.<br />
+Q = 0.8 * tan(Q * Pi / 4);&nbsp;&nbsp; // This is the correction factor.<br />
+Q = OmegaC / BW / Q;&nbsp;&nbsp;&nbsp; // This is the corrected Q. </p>
+<p>&nbsp;</p>
+<p><span class="style16">All Pass Filters</span><br />
+In order to design an IIR all pass filter, one starts by adding zeroes to an all 
+pole transfer function in the usual way, as shown here. Then use the 
+coefficients A - F in the IIR Low Pass equations given above. Although any all 
+pole prototype can be used, the Gauss polynomial yields the best results because 
+of its linear phase. Adjust Omega, in the calculation for T, to achieve the 
+desired delay time.</p>
+<p>&nbsp;<img alt="IIR Eqations" src="IIR%20Algorithm/Figure10.png" /></p>
+<p>&nbsp;</p>
+<p><span class="style16">Source Code</span><br />
+This is the <a href="IIR%20Algorithm/BilinearCode.txt">source code in C</a> for 
+the equations above. </p>
+<p>This <a href="A7ExampleCodePage.html">Code Kit</a> contains the entire 
+algorithm, including the 4th order root solver required for the band pass and 
+notch filters..</p>
+<p>The required 2nd order coefficients for H(s), A, B, C, D, E, and F can be 
+obtained from this <a href="FilterPolynomials.html" >Filter 
+Polynomial Program</a>.</p>
+<p>For an implementation of the algorithm given here, see our free
+<a href="4IIRFilterPage.html" >IIR Filter Designer</a>.</p>
+<p>&nbsp;</p>
+<p class="style16">6 Pole Butterworth Low Pass Filter Example</p>
+<p>
+<img alt="LowPassExample.png" height="775" src="IIR%20Algorithm/LowPassExample.png" width="730" /></p>
+<p>
+<img alt="LowPassExamplePlot.png" height="299" src="IIR%20Algorithm/LowPassExamplePlot.png" width="366" /></p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A4IIRBilinearTransform.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:24 GMT -->
+</html>

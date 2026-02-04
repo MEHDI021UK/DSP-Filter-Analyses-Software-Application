@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A8FirIirDifferences.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:31 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Difference Between FIR and IIR Filters</title>
+<style type="text/css">
+.style7 {
+	font-size: x-large;
+	color: #008000;
+}
+.style8 {
+	color: #008000;
+	font-size: large;
+}
+.style9 {
+	text-align: center;
+}
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style5 {
+	border-width: 0px;
+	font-size: x-large;
+	color: #008000;
+}
+</style>
+<meta content="FIR filter, IIR filter, Impulse response, Step response, Peak math register values, IIR filter stability, Math register size for IIR filters" name="keywords" />
+<meta content="Some of the important differences between FIR filters and IIR filters are explained." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15"><span class="style5">
+		<span class="style7">Differences Between FIR 
+Filters and IIR Filters</span></span></span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>If you found this web page because you Googled &quot;the difference between FIR 
+and IIR&quot;, then it is likely you have already seen numerous other web pages on 
+this subject and you are still trying to get a clear answer to your question. So 
+lets start by with a clear advantage that FIR has over IIR. </p>
+<p>Because of the way FIR filters can be synthesized, virtually any 
+filter response you can imagine can be implemented in an FIR structure as long as tap 
+count isn&#39;t an issue. For example, Butterworth and Chebyshev filters can be 
+implemented in FIR, but you may need a large number of taps to get the desired 
+response. So we generally use prototypes other than the s domain polynomials as 
+prototypes for FIR filters. As another example, if you want a band pass filter 
+with two pass bands, or a band pass filter with specific phase properties, an FIR can do the job with no problem. </p>
+<p>IIR filters on the other hand are essentially restricted to the well defined 
+responses that can be achieved from the s domain polynomials such as the 
+Butterworth. It is quite 
+difficult to synthesize a user defined filter in an IIR structure.</p>
+<p>It is quite possible however that the <strong>most important difference</strong> 
+between an IIR and FIR isn&#39;t the filter itself, but rather how the filter is 
+implemented. The beauty of FIR filters, and quite possibly their most important 
+feature, is that they can be implemented with integer math. As you are surely 
+aware, everyone wants small, low power, low cost, portable devices. These devices 
+typically use a processor similar to the Texas Instruments MSP430, or an FPGA, or 
+an ASIC. </p>
+<p>These types of processors work great and are as common as dirt, but seldom 
+have a floating point math core. Integer math is the standard because its easy, 
+cheap, fast, and low power. (Floating point math is then done in code, which is 
+very slow.) So the only reasonable way to 
+implement a digital filter in one of these devices is to use FIR. Thus it is the hardware, not the 
+characteristics of the filter that determines whether FIR or IIR will be 
+used. </p>
+<p>IIR filters can&#39;t be implemented in integer math because the IIR coefficients 
+can&#39;t be scaled to integer values without having the filter&#39;s math calculations 
+explode (the problem is with the feedback coefficients). For example, scaling the coefficients by 16, which 
+won&#39;t create nearly enough significant digits for filtering, will cause the 
+calculations to go exponential. Try it.</p>
+<p>The rest of this page shows some of the basic differences between an FIR and IIR filters. In the 
+first plot below, we compare the frequency responses of a12 pole Butterworth IIR 
+and a typical FIR filter (with emphasis on the word typical). The reader should 
+understand that if we want to, we can implement the 12 pole Butterworth as an 
+FIR and obtain an identical response, but that isn&#39;t typically done simply 
+because of the excessive number of taps required to achieve the Butterworth 
+response in an FIR.</p>
+<p>These two filters have comparable magnitude responses. Notice the differences 
+in the knee of the pass band at Omega = 0.2. In general, an IIR filter will have 
+a sharper knee than a comparable FIR filter. Also, the slope of IIR filter&#39;s 
+transition band will be 6 dB / octave / pole. A typical FIR transition band 
+slope changes with frequency as shown here (again, emphasis on the word 
+typical).</p>
+<p>This 
+FIR requires 50 multiplies + 50 adds while the IIR requires 30 multiplies + 36 
+adds for its 6 second order sections. The FIR has a constant group delay of 
+24.5 (equal to (NumTaps-1)/2 ) while the IIR has a much lower, but non-constant 
+group delay.</p>
+<p>
+<img alt="FIR Filter and  IIR Filter Response Comparison" height="400" src="FIR%20IIR%20Comparison/FIR%20IIR%20Freq%20Response%20Comparison.png" width="522" /></p>
+<p class="style8">&nbsp;</p>
+<p class="style8">Step Response and Delay</p>
+<p>The group delay and impulse response are the most basic differences between an FIR and IIR filter. An IIR filter has, at least in principle, 
+an infinitely long impulse response while an FIR filter&#39;s 
+impulse response is as long as its tap count. If an infinitely long impulse 
+response sounds problematic, remember that all analog filters have the same type 
+of response.</p>
+<p>Closely related to the impulse response is the filter&#39;s step response. This 
+next plot shows the step response for the two filters above. It shows the amount 
+of time for a pulse to propagate through the filter (time is in samples). Note 
+that the pulse is delayed more in the FIR than the IIR. This is fairly typical. Compare these delay 
+times with the group delay values plotted above. </p>
+<p>
+<img alt="FIR Filter and  IIR Filter Step Response Comparison" height="400" src="FIR%20IIR%20Comparison/FIR%20IIR%20Pulse%20Response%20Comparison.png" width="542" /></p>
+<p>The amount of overshoot and ringing is an important difference 
+between these two step responses. However, this difference has nothing to do 
+with whether the filter is an IIR or FIR. The IIR filter shown here is a 12 pole 
+Butterworth. A 12 pole Butterworth implemented as an FIR would have an identical 
+step response.</p>
+<p>Having said this, it is important to remember that the amount of overshoot in 
+the step response is a function of the filter&#39;s group delay characteristics, and 
+the slope of the filter&#39;s transition band. We chose to show typical FIR and IIR 
+filters here. FIR filters typically have a constant group delay, which will 
+reduce the amount of ringing and overshoot in the step response. However, we 
+could have shown an IIR Bessel filter, which would have almost no overshoot or 
+ringing.</p>
+<p>Just to be clear, if the magnitude responses are similar, then an FIR will 
+typically have less overshoot and ringing because it typically has better group 
+delay characteristics than the IIR.</p>
+<p class="style8">Impulse Response</p>
+<p>Here are the impulse responses for the two filters above (this time scale is 
+different than the step response plot above). Again, the FIR could have had the same 
+impulse response as the IIR, but we are showing a typical FIR filter. The 
+typical FIR filter&#39;s impulse response is centered at (N-1)/2 and is symmetric 
+about the center. The typical IIR impulse response starts sooner, and ends 
+later. Again, the difference in ringing has nothing to do with IIR or FIR, but 
+rather the prototype used to synthesize the filter.</p>
+<p>It may be of interest to the reader that the impulse response of a12 pole 
+Butterworth filter implemented in an opamp circuit would have the same 
+characteristics as this IIR digital filter.</p>
+<p>
+<img alt="FIR Filter and IIR Filter Impulse Response Comparison" height="400" src="FIR%20IIR%20Comparison/FIR%20IIR%20Impulse%20Comparison.png" width="542" /></p>
+<p class="style8">Stability</p>
+<p>An important difference between IIR and FIR filters is the potential for the 
+IIR filter to be unstable. An FIR filter will be stable no matter how it is 
+synthesized or implemented (it has no feedback). On the other hand, an IIR 
+filter with improperly placed poles can&#39;t be made stable no matter how it is 
+implemented. Please remember however that OpAmp filters are the same as IIR 
+filters in this respect. Both IIR and OpAmp filters need to be carefully 
+synthesized and implemented or they risk being unstable.</p>
+<p>So, how difficult is it to get a stable IIR filter designed and implemented? 
+The following link discusses the stability of the IIR filters synthesized by our 
+free IIR filter program. It discusses IIR filter pole locations, compares the 
+frequency response of IIR filters to known stable filters, and shows a method by 
+which the engineer can assess the margin of stability the IIR filter has.&nbsp;
+<a href="4IIRFilterPage.html#IIR Filter Stability" >IIR Filter 
+Stability</a></p>
+<p class="style8">Math Register Size</p>
+<p>For the sake of comparing an FIR to an IIR, we will assume we are using a 
+fixed point processor. Both the number of bits to left and to the right of the 
+decimal place are important. The number of bits to the right determine the 
+maximum attenuation one is able to achieve with the filter. The number of bits 
+to the left determine the register&#39;s maximum value (overflow must never occur). </p>
+<p>An important difference between FIR and IIR filters is the peak math values 
+generated by the filter as a signal is processed. Because of the overshoot in 
+the filters step response, square waves typically create the largest math values 
+in a filter.</p>
+<p>For the two filters shown on this page, the peak 
+math register value for the FIR is only 1.3, and this is fairly typical of an 
+FIR filter. In fact, FIR filters never generate math values greater than 2 (for 
+a signal with ±1 amplitude and unity filter gain). </p>
+<p>IIR filters are quite different in this respect. The IIR filter shown above 
+has a peak math value of 6.5 while filtering a square wave, but there is no such 
+thing as a typical peak math value for IIR filters. They can range from 1.0 to 
+10,000 or even higher. The filter&#39;s peak math value is a strong function of the 
+polynomial it is based on and its selectivity. The more selective the filter, 
+the higher the math values. If working with relatively low distortion filters 
+(moderate selectivity), you can expect the peak math value to be less than 32, 
+but even this small value would require 4 more bits than an FIR filter.</p>
+<p class="style8">Implementation Structures</p>
+<p>An important difference between IIR and FIR filters is in the implementation 
+structure. FIR filters are usually implemented as Nth order polynomials. IIR 
+filters on the other hand, can be implemented this way, but only if a floating 
+point processor is available. If using a fixed point processor, an IIR filter 
+must be implemented as a series of second order sections (biquads). </p>
+<p>The reason for this lies with the magnitude of the math values generated by 
+the filter, which we show in the following table. If using fixed point, the 
+larger math values require more register bits to prevent overflow, which is 
+strictly forbidden. Here we give the peak math values for an IIR filter 
+implemented both ways. For example, if implemented in 2nd order sections, the 
+Butterworth filter needs 3 integer bits to prevent overflow, but would require 
+18 integer bits if implemented as an Nth order poly. The number of fractional 
+bits required would be the same in both cases. (Integer bits are needed to 
+accommodate math values greater than 1, while the fractional bits are needed to 
+achieve the desired stop band performance. These are completely separate 
+problems.)</p>
+<table>
+	<tr>
+		<td style="width: 238px">12 Pole Filter Types</td>
+		<td class="style9" style="width: 156px">&nbsp;2nd Order Peak Math</td>
+		<td class="style9" style="width: 199px">Nth Order Peak Math</td>
+	</tr>
+	<tr>
+		<td style="width: 238px">Butterworth Low Pass</td>
+		<td class="style9" style="width: 156px">6.5 (3 bits)</td>
+		<td class="style9" style="width: 199px">194,806&nbsp; (18 bits)</td>
+	</tr>
+	<tr>
+		<td style="width: 238px">Cheby Low Pass 0.2 dB Ripple</td>
+		<td class="style9" style="width: 156px">94.3 (7 bits)</td>
+		<td class="style9" style="width: 199px">120,684,358 (27 bits)</td>
+	</tr>
+	<tr>
+		<td style="width: 238px">Butterworth Band Pass</td>
+		<td class="style9" style="width: 156px">13.9 (4 bits)</td>
+		<td class="style9" style="width: 199px">6.134E14 (50 bits)</td>
+	</tr>
+	<tr>
+		<td style="width: 238px">Cheby Band Pass 0.2 dB Ripple</td>
+		<td class="style9" style="width: 156px">44.9 (6 bits)</td>
+		<td class="style9" style="width: 199px">1.982E29&nbsp; (98 bits)</td>
+	</tr>
+	<tr>
+		<td style="width: 238px">&nbsp;</td>
+		<td class="style9" style="width: 156px">&nbsp;</td>
+		<td class="style9" style="width: 199px">&nbsp;</td>
+	</tr>
+</table>
+<p><img alt="IIR Diagram.png" src="FIR%20IIR%20Comparison/IIR%20Diagram.png" /></p>
+<p>It should be obvious that except for the denominator, IIR and FIR structures 
+are identical. </p>
+<p>To summarize, an FIR filter is almost always implemented as an Nth order 
+poly. It can be implemented in 2nd order sections, but there is no need to and finding the 
+polynomial&#39;s N roots is 
+numerically difficult because of their close proximity to one another. </p>
+<p>An IIR filter can be implemented either way if using floating point. If using 
+fixed point however, an IIR filter must be implemented in 2nd order sections 
+because of practical hardware considerations.</p>
+<p>The
+<a href="A7ExampleCodePage.html" >Example FIR IIR C Code</a> page 
+gives code examples for implementing both FIR and IIR filters. </p>
+<p class="style8">&nbsp;</p>
+<p class="style8">IIR Zero Input Limit Cycles</p>
+<p>IIR filters differ from FIR filters in that some IIR filters can suffer from 
+a phenomenon known as <a href="4IIRFilterPage.html#Zero Input Limit Cycles">Zero 
+Input Limit Cycles</a>. This is a problem related to register size where the IIR 
+filter is unable to clear its registers and its output can&#39;t settle at zero 
+after the 
+input goes to zero. The filter&#39;s output may oscillate indefinitely because a 
+small residual signal continues to circulate within the filter. </p>
+<p>Of course, an ideal IIR filter&#39;s output will never settle at zero in theory, 
+but this is only true if the registers have infinite precision. The truncation 
+caused by limited register size will limit the length of the filters impulse 
+response and should also prevent limit cycles. Notch and high pass IIR filters 
+are most susceptible to this problem and will require extra register bits to 
+prevent this phenomenon from occurring. </p>
+<p>&nbsp;</p>
+<p class="style8">Pole Zero Locations</p>
+<p>If you are somewhat new to filter design, you may be wondering how the 
+filter&#39;s pole zero locations affect the filter&#39;s response. </p>
+<p>Here we show the pole zero locations for a 5 pole Inverse Chebyshev low pass 
+implemented in both IIR and FIR. Note the pole zero locations with respect to 
+the filter&#39;s corner frequency. Also note how the 5 IIR zero locations are 
+maintained in the FIR implementation.</p>
+<p>As shown on the left, the FIR response is slightly different than the IIR 
+response, but this difference diminishes to zero as the tap count is increased. The slight difference in the 5 zero locations on the unit circle also 
+diminishes to zero as the tap count is increased.</p>
+<p>
+<img alt="5 Pole Inv Cheb Pole Zeros.png" height="314" src="FIR%20IIR%20Comparison/5%20Pole%20Inv%20Cheb%20Pole%20Zeros.png" width="663" /></p>
+<p>Here is a more typical zero plot for an FIR filter. All of its stop band zeros 
+are on the unit circle. Again, note the 14 zeros on the unit circle and the 14 
+nulls in the response.</p>
+<p>Since this is a linear phase filter, the pass band zeros come in sets of 2 
+and 4. A zero on the real axis has a counterpart on the axis reflected about the 
+unit circle. If not on the real axis, the zeros come in a set of four, reflected 
+about the axis and reflected about the unit circle. It should be noted that this 
+filter has a zero at the origin that isn&#39;t shown.</p>
+<p>
+<img alt="FIR Zero Plot" height="318" src="FIR%20IIR%20Comparison/Zero%20Plot%20for%20Linerar%20Phase.png" width="656" /></p>
+<p>&nbsp;</p>
+<p class="style8">Apples and Oranges ?????</p>
+
+<p>In general, trying to compare an IIR filter to an FIR filter is a bit like comparing 
+apples to oranges. However, since we can implement an analog filter as an FIR, 
+lets try to make a comparison using a data filter example.</p>
+<p>Here we implement a 12 pole <a href="7AdjustablePolyPage.html" >Adjustable Gauss</a> filter 
+with gamma = 0, 
+which has a response midway between a Gauss and Butterworth. The responses 
+for both the IIR and FIR are shown here.</p>
+<p>As can be seen, there is little difference in the performance of these two 
+filters. The FIR requires 36 Multiply/Adds while the IIR requires 30 
+Multiply/Adds plus 6 adds, so the difference here is also negligible, except 
+that the FIR can be done using integer math. So, for this particular filter, 
+there is very little difference between an FIR and IIR filter.</p>
+<p>
+<img alt="12 Pole Adj Gauss FIR Filter and 12 Pole Adj Gauss IIR Filter Comparison" height="400" src="FIR%20IIR%20Comparison/12%20Pole%20Adj%20Gauss.png" width="522" /></p>
+<p>
+<img alt="12 Pole FIR Filter and 12 Pole IIR Filter Response Comparison" src="FIR%20IIR%20Comparison/12%20Pole%20Adj%20Gauss%2016%20Bit%20Response.png" /></p>
+<p>The point of this example was to make it clear that in terms of performance, 
+the difference between an FIR and IIR <strong>can be</strong> minimal. This is 
+especially true when a polynomial such as the Bessel, Gauss, or Inverse 
+Chebyshev is used as the FIR prototype. For more discussion on this, see
+<a href="B2PolynomialFIRFilters.html" >Polynomial FIR Filters</a>. &nbsp;&nbsp; </p>
+<p>To summarize, an IIR filter is neither better or worse than an FIR filter. 
+Each has its place and the project&#39;s overall requirements will determine which 
+is the better solution.</p>
+<p>This web site is intended for engineers who are not experts in filter design, 
+but still need to implement a good filter, whether it be analog or digital. The 
+programs here are free, and I give examples of implementation code for the 
+digital filters, and implementation tips for the analog filters. Ultimately 
+however, you have to dig in and work with this stuff to learn it.</p>
+<p>
+		<a href="Index.html" >Home Page</a>&nbsp;&nbsp;&nbsp;
+<a href="4IIRFilterPage.html" >IIR Filter Page</a>&nbsp;&nbsp;&nbsp;
+		<a href="5FIRFiltersPage.html" >FIR Filter Page</a>&nbsp;&nbsp;
+<a href="8DownloadPage.html" >Download Page</a>.&nbsp;&nbsp; </p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A8FirIirDifferences.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:32 GMT -->
+</html>

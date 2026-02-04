@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/9RFFiltersPage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:14 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>RF Filter Design Software&nbsp; (LC Ladder Networks)</title>
+<style type="text/css">
+.style8 {
+	color: #008000;
+	font-size: large;
+}
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style3 {
+	font-size: x-large;
+	color: #008000;
+}
+</style>
+<meta content="Direct coupled filters, Norton transform filters, band pass filters, RF Filters, free RF Filter design software, LC Filters" name="keywords" />
+<meta content="Free RF Filter design software specializing in the design of Direct Coupled and Norton Transform band pass filters, as well as low pass, high pass, and notch filters." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15"><span class="style3">
+		RF Filter Design</span></span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>This free RF Filter program&nbsp;specializes in the design of LC band pass 
+filters, but it also synthesizes low pass, high pass, and notch filters. </p>
+<p>Designing a band pass LC filter is almost a lost art today as most 
+of these filters 
+are built with ceramic resonators, and for the obvious reason, size. There are 
+however, many relatively low volume applications not serviced by the ceramics 
+houses that need these filters.</p>
+<p>RF filter design requires that you be very good with a simulator, 
+network analyzer, and layout tools. This software will help do the easy part, 
+which is, coming up with a good starting point for your simulator and optimizer. 
+</p>
+<p>There are 4 basic ways to build an LC band pass filter. The first 
+is the simplest and taught in most textbooks, which we call the 
+canonical form. <br />
+<br />
+The second method uses the techniques described in Elliptic Approximation and 
+Elliptic Filter Design on Small Computers, Pierre Amstutz, IEEE Transactions on 
+Circuits and Systems, Vol. CAS-25 No12, December 1978.<br />
+<br />
+The third method uses Norton Transforms. Most EE students 
+learn about Norton Transforms in college, but not as they apply to band pass filter design. <br />
+<br />
+The 
+forth, and most popular design method, is the Direct Coupled filter. This method was 
+outlined in Direct Coupled Resonator Filters, Seymour Cohn, Proceedings of the 
+IRE, Feb 1957, pp. 187-196. </p>
+<p>Here are examples of these band pass filter topologies.&nbsp;</p>
+<p>
+<img alt="3 Band Pass Filter Forms.png" src="RF%20Filters/3%20Band%20Pass%20Filter%20Forms.png" /></p>
+<p>See this page for
+<a href="RF%20Filters/63RFFilterToplogies.html" >70 More 3 Pole Band Pass 
+Topologies</a></p>
+<p>The following is a short discussion on the pros and cons of these four types 
+of band pass filters. </p>
+<p><span class="style8">Canonical Filters</span><br />
+The canonical form, or simplest form, is described in most textbooks, but is 
+almost useless in practice. These filters cannot be built unless the bandwidth is greater than about 50 percent. Even then, the component values 
+required to build the filter become impractical. The series inductors are 
+prohibitively large in the sense that their self resonant frequency becomes a 
+major problem. It is also impractical, and usually impossible, to obtain the 
+nominal values needed, not to mention the problem with tolerances. </p>
+<p>In general, the only place for a canonical band pass filter is in 
+applications requiring very wide bandwidth. If you are new to RF filter design, 
+take some free advice and don&#39;t waste any time with these, except for the time 
+required to understand their limitations. Engineers understood these limitations many years 
+ago, and devised methods that add parts to the design which in turn gives you some latitude in the selection of component values. </p>
+<p><span class="style8">Elliptic Filters</span><br />
+If you implement an elliptic band pass RF filter, the IEEE will almost 
+certainly give you a lifetime achievement award, because that&#39;s how long it will 
+take to make it work. The problem is component tolerances, there can&#39;t be any. </p>
+<p>Sarcasm aside, elliptic RF filters are little more than a textbook curiosity. 
+If you are really desperate, and only need one or two of them, they are OK for 
+lab work, but I seriously doubt anybody has ever put an elliptic RF band pass 
+into production. They have very little practical value. </p>
+<p><span class="style8">Norton Transformed Filters</span><br />
+As we all learned in EE 101, an ideal transformer with a K turns ratio may be inserted into a 
+circuit at any location. The effect of the transformer is to change the 
+impedance of the circuit by K squared. This program inserts two ideal 
+transformers into the circuit, one on each end, and uses Norton Transformations 
+to take the ideal transformers out. An example is shown here.<o:p> The 
+interested reader should consult this text for more details: The Analysis, 
+Design, and Synthesis of Electrical Filters, Humpherys, 1970 Prentice Hall.</o:p></p>
+<p>
+<img alt="Norton Transform.png" height="369" src="RF%20Filters/Norton%20Transform.png" width="568" /></p>
+<p>When the ideal transformer is inserted, the series cap is first replaced by 
+two caps both equal to 2*C2 so that the transformation can be done on both ends. 
+In doing the Norton Transform, the C1*K*K/(1-K) term will generate a negative 
+value for K&gt;1. This negative value is added to the 2*C2*K*K value for a positive 
+result. Either the Tee circuit or the Pi circuit can be used in the final 
+circuit.<o:p>&nbsp;</o:p></p>
+<p>For a given circuit, there is usually a number of different ways to implement 
+Norton Transforms. For example, this program has 4 transforms for 3 pole 
+band pass filters and each transform has an infinite number of potential results 
+depending on K. Which transform works best will depend on the frequency, 
+impedance, and bandwidth of the original circuit. </p>
+<p>Norton Transformed filters are not as widely used as Direct Coupled filters. 
+They are probably most used in medium bandwidth applications. They work just as 
+well as a Direct Coupled filter in narrow band applications, but the design method is a 
+bit more complicated so don&#39;t get used as often. The impedance inverters used 
+in Direct Coupled filters are inherently narrow band, so &quot;direct coupled&quot; 
+implies &quot;narrow bandwidth&quot;.</p>
+<p><span class="style8">Direct Coupled Filters</span><br />
+This is the most popular form of LC band pass filter. These filters can be 
+designed in so many ways, it becomes a chore to describe them all. Numerous 
+articles have been written on this design method, so there is no need 
+to labor over the details here. The Iowa Hills RF Filter program has 10 types of 
+tank circuits, and 3 types of inverter circuits, plus it will mix inverter types 
+with matching types. The number of possible filter topologies is <strong>huge.</strong> 
+Each topology has a slightly different response and its own set of advantages.</p>
+<p>Here is a
+<a href="RF%20Filters/The%20Design%20of%20Direct%20Coupled%20Band%20Pass%20Filters.pdf">
+paper</a> we have started that describes how to design Direct Coupled Filters in 
+some detail. It is a work in progress.</p>
+<p>In the 
+screen shot below, we show a very popular, and very useful design that uses shunt LC 
+tanks, capacitive inverters, and inductive matches. If you are new to Direct 
+Coupled filters, you should notice that the 3 tank inductors are same &quot;nice value&quot;, 22 nH. 
+The beauty of this design method lies in the fact that 
+these tank inductor values are chosen, not predetermined. This is incredibly 
+important because it allows you to minimize the filter&#39;s insertion loss and use 
+part values that inductor vendors have available.</p>
+<p>&nbsp;</p>
+<p class="style8">RF Filter Screen Shot<br />
+<img alt="RF Filter Program Screen Shot" height="647" src="RF%20Filters/RF%20Filter%20Screen%20Shot.png" width="666" /></p>
+<p>
+Available on the&nbsp; <a href="8DownloadPage.html" >Download Page</a>.</p>
+<p>
+RF = ReFined</p>
+<p>
+Copyright 2013&nbsp; Iowa Hills Software</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/9RFFiltersPage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:15 GMT -->
+</html>

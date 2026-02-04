@@ -1,0 +1,238 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/4IIRFilterPage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:11 GMT -->
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>IIR Filter Design, Software and Examples</title>
+<style type="text/css">
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style16 {
+	color: #008000;
+	font-size: large;
+}
+.style9 {
+	color: #008000;
+	font-size: large;
+}
+.style20 {
+	color: #000000;
+}
+.style21 {
+	text-align: center;
+}
+.style22 {
+	font-size: x-large;
+	color: #0000FF;
+}
+</style>
+<meta content="IIR Filter design, Digital Filter design, IIR Filter Calculator, iir filter stability, iir pole zero, free" name="keywords" />
+<meta content="Free IIR filter design software using the bilinear transform." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style22">Iowa Hills Software&nbsp;&nbsp; Digital and Analog 
+		Filters</span><span class="style21">&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15">IIR Filter Design</span> </span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>This IIR filter design program is free. It uses the bilinear transform to 
+synthesize low pass, high pass, band pass, notch, and all pass filters from these polynomials:</p>
+<table style="width: 454px">
+	<tr>
+		<td style="width: 160px">Butterworth</td>
+		<td style="width: 160px"> 
+<a href="IIRChebyshevFilters.html" >Chebyshev</a></td>
+		<td style="width: 133px">Gauss</td>
+	</tr>
+	<tr>
+		<td style="width: 160px">Bessel</td>
+		<td style="width: 160px"> 
+<a href="IIRInverseChebyshevFilters.html">Inv 
+Chebyshev</a></td>
+		<td style="width: 133px">&nbsp;<a href="IIREllipticFilters.html" >Elliptic</a></td>
+	</tr>
+	<tr>
+		<td style="width: 160px">
+<a href="7AdjustablePolyPage.html">
+		Adjustable Gauss </a> </td>
+		<td style="width: 160px">&nbsp;</td>
+		<td style="width: 133px">&nbsp;</td>
+	</tr>
+</table>
+<p>The program has two test benches. The first allows you to test the filter 
+with an impulse, square wave, sine wave, or a user defined signal. The program will display both the filtered and unfiltered 
+signal in both the frequency and time domains. </p>
+<p>It also has an audio test bench that allows you to apply the filter to a wav 
+file which allows you to hear the affects of filtering. The program is available 
+on our
+<a href="8DownloadPage.html" >Download Page</a></p>
+<p>If you are more interested in writing your own IIR program, see the
+<a href="A7ExampleCodePage.html">Example C Code Page</a>. The Code Kit has all 
+the code necessary for generating IIR coefficients from the polynomials listed 
+above. It also has the code for evaluating the filter&#39;s frequency response, as 
+well as the code for implementing the filter.</p>
+<p>&nbsp;<span class="style16">Design Method</span><br />
+Using the Bilinear Transform to design an IIR filter is quite simple. The basic procedure is given here, where we 
+substitute the definition for the bilinear transform into H(s). </p>
+<p>
+<img alt="BilinearEquations.png" height="331" src="IIR%20Filters/BilinearEquations.png" width="546" /> </p>
+<p>H(z) shows how to calculate the IIR filter coefficients from the analog low pass 
+prototype coefficients A - F and T. T is determined by the desired 3 dB cutoff 
+frequency Omega. The 2nd order analog filter coefficients (e.g. Butterworth 
+coefficients) can be obtained from virtually any filter design book. More details 
+are given <a href="A4IIRBilinearTransform.html">here</a>.</p>
+<p>&nbsp;</p>
+<p><span class="style16">Filter Stability</span><br />
+The stability of an IIR filter is always of some concern. If we start with 
+a stable s plane filter, and we always do, then the bilinear transform is 
+mathematically guaranteed to generate a stable IIR filter.</p>
+<p>Instabilities can arise however because of implementation issues (numerical 
+problems). The two most important aspects to consider are the size of the math registers and 
+the type of implementation structure used. This shows the 11 ways the program allows you to 
+test the filter&#39;s implementation, in floating point and fixed point.</p>
+<p>
+<img alt="StructuresScreenShot.png" src="IIR%20Filters/StructuresScreenShot.png" /></p>
+<p>
+<img alt="FlowCharts.png" height="510" src="IIR%20Filters/FlowCharts.png" width="535" /></p>
+
+<p>&nbsp;</p>
+<p><span class="style9">Zero Input Limit Cycles</span><br />
+Zero Input Limit Cycles is the term generally used to describe the effect of 
+the filter&#39;s inability to settle at zero after the input goes to zero. By 
+definition an IIR filter has an infinitely long impulse response, but we assume 
+the output will always tend toward zero after the input goes to zero.</p>
+<p>In some cases however, depending on the type of filter and the number of bits 
+used to implement the filter, the filter&#39;s output will approach some small 
+value, and then oscillate indefinitely, or remain at a DC level. This happens 
+because the filter can&#39;t clear 
+its registers entirely and the residual re-circulates through the filter 
+indefinitely never allowing the output to settle at zero. This residual output signal can be 
+large enough to cause problems in some applications. High pass and notch filters are the most 
+susceptible to this phenomenon. Here is an example of limit cycles at the 
+output of a Chebyshev high pass.</p>
+<p>
+<img src="IIR%20Filters/Zero%20Input%20Limit%20Cycles%20Vs%20Register%20Size2.png" /></p>
+<p>&nbsp;</p>
+<p><span class="style16">Avoiding Register Overflow</span><br />
+A significant amount of effort went into this program to ensure that the math 
+values generated by these filters are kept to a minimum. IIR filters differ from FIR filters in obvious ways, but one of the more 
+important, and less obvious differences, is the peak math value 
+generated by the filter. Both FIR and IIR filters generate their peak math value 
+when processing a square wave. </p>
+<p>With an FIR filter, the peak math value is the 
+same as the amount of overshoot in the filter&#39;s step response and is seldom 
+greater than ±1.2 if processing a ±1 square wave.</p>
+<p>The peak math value generated by an IIR filter however depends on the implementation 
+structure, the polynomial 
+(Butterworth, etc), pass type (low pass, etc.), selectivity (highly 
+selective filters generate larger math values), and the type and frequency of 
+the signal being processed. The largest math values are generated by square 
+waves of a specific frequency. The worst case frequency is also dependent on all 
+the factors just mentioned.</p>
+<p>To demonstrate, we list the peak math values generated by these filters in 
+these structures. All are 8 pole low pass filters with OmegaC = 0.125. The 
+Chebyshev had 0.2 dB Ripple, the Inv Cheby had a 60 dB Stop Band, and the 
+Elliptic had a 0.2 dB Ripple and a 60 dB Stop Band.</p>
+<table style="width: 86%">
+	<tr>
+		<td class="style21" style="width: 148px">&nbsp;</td>
+		<td class="style21" colspan="6"><strong>Peak Math Values Generated by a 
+		±1 Square Wave</strong></td>
+	</tr>
+	<tr>
+		<td class="style21" style="width: 148px">&nbsp;</td>
+		<td class="style21">Gauss</td>
+		<td class="style21">Bessel</td>
+		<td class="style21">Butterworth</td>
+		<td class="style21">Inv Cheby</td>
+		<td class="style21">Chebyshev</td>
+		<td class="style21">Elliptic</td>
+	</tr>
+	<tr>
+		<td style="width: 148px">Biquad Form 1</td>
+		<td class="style21">1.4</td>
+		<td class="style21">1.63</td>
+		<td class="style21">3.56</td>
+		<td class="style21">3.9</td>
+		<td class="style21">4.46</td>
+		<td class="style21">4.9</td>
+	</tr>
+	<tr>
+		<td style="width: 148px">Biquad Form 2</td>
+		<td class="style21">3.4</td>
+		<td class="style21">4.5</td>
+		<td class="style21">25.38</td>
+		<td class="style21">27.0</td>
+		<td class="style21">172.5</td>
+		<td class="style21">86.8</td>
+	</tr>
+	<tr>
+		<td style="width: 148px">Nth Order Form 1</td>
+		<td class="style21">4.8</td>
+		<td class="style21">8.4</td>
+		<td class="style21">33.82</td>
+		<td class="style21">33.0</td>
+		<td class="style21">78.8</td>
+		<td class="style21">84.2</td>
+	</tr>
+	<tr>
+		<td style="width: 148px">Nth Order Form 2</td>
+		<td class="style21">88.9</td>
+		<td class="style21">353</td>
+		<td class="style21">91.5E3</td>
+		<td class="style21">71.3E3</td>
+		<td class="style21">3.76E6</td>
+		<td class="style21">11.8E6</td>
+	</tr>
+</table>
+<p class="style16">&nbsp;</p>
+<p><span class="style16">10 Pole Inverse Chebyshev Low Pass Filter Example<br />
+</span><img alt="10 Pole Inverse Chebyshev Low Pass IIR Filter Response" src="IIR%20Filters/10%20Pole%20Inv%20Cheby%20LPF%20Response.png" /><br />
+<a href="IIR%20Filters/10PoleInvChebyLPFCoefficients.txt">This Filters 
+Coefficients</a><br />
+</p>
+<p>
+<img alt="10 Pole Inv Cheby LPF Pole Zeros" height="348" src="IIR%20Filters/10%20Pole%20Inv%20Cheby%20LPF%20Pole%20Zeros.png" width="453" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span class="style9">Screen shot of the IIR Filter program (free).</span>&nbsp;
+<a href="8DownloadPage.html" >Available on the Download Page</a></p>
+<p>
+<img alt="IIR Screen Shot.png" src="IIR%20Filters/IIR%20Screen%20Shot.png" /><br />
+<a href="IIR%20Filters/10%20Pole%20Inv%20Cheby%20LPF.txt">Example coefficients 
+(for the filter shown).</a></p>
+<p>&nbsp;</p>
+<p><span class="style9">Screen shot of the program&#39;s test bench.<br />
+</span>
+<span class="style20">The Pole Zero locations are shown here.&nbsp; Signals may 
+also be plotted in both the time and frequency domains.</span><span class="style9"><br />
+</span>
+<img alt="IIR Test Bench Screen Shot.png" src="IIR%20Filters/IIR%20Test%20Bench%20Screen%20Shot.png" /></p>
+<p>&nbsp;</p>
+<p><span class="style9">Screen shot of the Audio Test Bench.</span><br />
+The Audio Test Bench allows you to filter a wav file, and play the results. This 
+shows the spectrum for a filtered and unfiltered DTMF tone.</p>
+<p>&nbsp;<img alt="SoundForm Screen Shot.png" src="IIR%20Filters/SoundForm%20Screen%20Shot.png" /></p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/4IIRFilterPage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:14 GMT -->
+</html>

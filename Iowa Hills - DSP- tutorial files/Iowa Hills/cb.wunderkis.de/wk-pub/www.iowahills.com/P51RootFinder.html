@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/P51RootFinder.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:41 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>P51 Root Finder</title>
+<style type="text/css">
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style16 {
+	font-size: large;
+	color: #008000;
+}
+.style17 {
+	border-width: 0px;
+}
+</style>
+<meta content="polynomial root finder c++, jenkins traub, c++ source code, Quartic polynomial, Cubic polynomial, quartic formula, Quartic function" name="keywords" />
+<meta content="P51 is a root finder using Jenkins Traub mathematics. This is much more accurate and much simpler than the original J-T code. The C++ code for a Quartic and Cubic root finder is also given." name="description" />
+</head>
+
+<body>
+
+<table>
+	<tr>
+		<td style="width: 150px" valign="top">
+		<img alt="P51 Mustang" src="P51/P51Mustang.jpg" class="style17" /></td>
+		<td valign="top">
+		<span class="style14">Iowa Hills Software &nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15">P51 Polynomial Root Finder 
+		and<br />
+		Quartic and Cubic Root Finder&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span>
+		<br />
+		<a href="Index.html" >Home</a></td>
+	</tr>
+</table>
+<p>This page gives the source code for two root finders. The first is the P51 
+Root Finder which is for polynomials with real coefficients, up to 100th order. 
+The second is a Quartic and Cubic root finder, which solves for roots 
+algebraically. The C++ source code for both is 
+here.&nbsp; <a href="Downloads/Iowa%20Hills%20P51%20Root%20Finder.zip">P51 
+Source Code</a>.</p>
+<p>The P51 Root Finder is a top to bottom rewrite of the Jenkins Traub Root Finder. 
+It uses some of the same mathematics used by Jenkins and Traub, but <strong>it is not</strong> 
+a translation of
+their <a href="http://www.netlib.org/toms/">algorithm</a> into C. The P51 algorithm is quite different in many respects.</p>
+<p>The Jenkins Traub root finder was written in the early 70&#39;s, making it more 
+than 40 years old. In 1970 the Jenkins Traub root finder was state of the art technology, and to its 
+credit, many authors claim that it is still the root finder by which all others 
+are judged. The problem however, is that this archaic piece of FORTRAN code is 
+virtually indecipherable. Its liberal use of goto statements and global 
+variables makes it incredibly difficult to follow.</p>
+<p>The development of P51 started as an effort to do a straight conversion of 
+Jenkins Traub from FORTRAN into C. The original intent was to get rid of the global 
+variables and goto statements, but otherwise make as few changes as possible. 
+For numerous reasons however, this simple goal was unattainable, and we ultimately made numerous substantive changes.</p>
+<p>For example, this algorithm no longer scales the polynomial coefficients at 
+the beginning of the algorithm. Jenkins 
+and Traub 
+did this as a way to avoid overflow and underflow, but this scaling led to a 
+convergence test that is 
+indecipherable, which may be the ultimate reason for the algorithm&#39;s inaccuracies.</p>
+<p>The P51 algorithm does not use special forms of recursion, 
+or combine fixed shift iterations with variable shift iterations. Another 
+important difference is the degree of, and the calculation of, the K polynomial 
+used to find 2nd order factors (sometimes referred to as an H polynomial). We use an N-2 degree polynomial where Jenkins 
+Traub used an N-1 degree polynomial. We initialize K with the 2nd derivative of 
+P, while J-T initialized K to the 1st derivative. </p>
+<p>Ultimately, these changes led to a more linear algorithm, making it much 
+easier to follow and understand. The underlying mathematics used in P51 originated with Jenkins and Traub 
+in
+<a href="http://academiccommons.columbia.edu/download/fedora_content/download/ac:166446/CONTENT/Traub__a_three_stage_algorithm_for_real_polynomials_using_quadratic_iteration.pdf">
+this paper</a>, (eq. 9.8 is of particular interest), but we did not implement 
+their math as they did in their FORTRAN algorithm, and made 
+significant changes to the equations used to update the 2nd order coefficients
+<strong>u</strong> and <strong>v</strong>.</p>
+<p><strong><span class="style16">Accuracy<br />
+</span></strong>In a word, accuracy is the biggest difference between this 
+algorithm and Jenkins Traub. In virtually all of our tests, this algorithm gave more 
+accurate results than J-T (unless the error was insignificant). The tests were run by 
+building polynomials from known roots, and then comparing the calculated roots 
+with the originals. </p>
+<p>The error was calculated as follows:</p>
+<p>
+<img alt="ErrorSumEquation.png" height="112" src="P51/ErrorSumEquation.png" width="383" /></p>
+<p>The errors from P51 are typically 1% of those from Jenkins Traub, but as with 
+all root finder tests, this result depends on the type of polynomial tested 
+(degree, root types, and root locations). In 
+some cases, the P51&#39;s results were only 10X more accurate, while 
+in other cases the difference would be more than 1000X.</p>
+<p>The accuracy tests were done by taking the average error result from 250 
+tests, across a wide range of polynomial orders and root locations. The J-T algorithm gave 
+slightly better accuracy in some cases, but this was 
+not typical.</p>
+<p>Unfortunately, an accuracy test such as this is fraught with problems. For 
+example, we can&#39;t know with certainty that the J-T code we were testing was done 
+properly. We downloaded two different algorithms, which were converted to C in 
+dramatically different ways, but both gave similar results. Unfortunately, both 
+were done using 64 bit <strong>double</strong> variables, instead of 80 bit
+<strong>long double</strong>&#39;s as is used in P51. We converted the J-T code to 
+long doubles, but this had little effect. We may have also done this conversion 
+improperly as the convergence criteria used in J-T is quite complicated.</p>
+<p><span class="style16">Testing</span><br />
+We would urge the reader to test this algorithm, or any other root finder, 
+before using it in your application. No root finder is absolutely robust, so you 
+need to test them with the types of polynomials you typically work with.</p>
+<p>The author of this algorithm is an electrical engineer, so the testing was 
+biased toward polynomials with roots primarily located between the two circles 
+with radii of 0.01 and 100. For a given polynomial, the variation in polynomial 
+coefficients was limited to about 50 orders of magnitude.</p>
+<p>To facilitate your testing, we included two test functions in the source code 
+files. The first function will build a polynomial from a set of roots. This 
+makes it easy to generate a test polynomial from known roots, then 
+the found roots can be compared to the originals.</p>
+<p>The second function sorts roots. The problem with comparing roots is that the 
+roots returned by the root finder will not be arranged in the same order as the 
+originals. This simple function will align the original 
+roots with the found roots in their respective arrays, making it easy to compare 
+the two. </p>
+<p><span class="style16">Speed</span><br />
+Speed is only important as an indicator of a properly functioning 
+algorithm. Otherwise, speed isn&#39;t an issue, unless it&#39;s absurdly slow. We needed 
+better accuracy from a root finder, so that&#39;s what we emphasized. Nevertheless, 
+P51 can be slightly faster, or slightly slower than J-T, depending on root 
+locations.</p>
+<p><span class="style15"><strong>Links to Jenkins Traub in C</strong></span>.<br />
+These two sources are close representations of the original J-T algorithm 
+written in C.<br />
+<a href="http://www.akiti.ca/rpoly_ak1_Intro.html">Akiti</a><br />
+<a href="http://www.crbond.com/roots.htm">C.R. Bond</a></p>
+<p>&nbsp;</p>
+<p><span class="style16">Quartic and Cubic Root Finder</span><br />
+The source code file for
+P51 also contains a 3rd and 4th order algebraic root finder.&nbsp; This code 
+originated at <a href="http://www.netlib.org/toms/">TOMS, Algorithm 326</a> 
+which 
+is based on the paper &quot;Roots of Low Order Polynomials&quot; by Terence R.F.Nonweiler 
+CACM (April 1968). <br />
+<br />
+We made extensive changes to the TOMS code however. Among other things, we use 
+scaling and polynomial reversals as&nbsp; a way to <strong>greatly improve</strong> the 
+algorithm&#39;s accuracy and range. We also made extensive changes to the test 
+conditions used in the algorithm. This code should be useful if a relatively light and fast algorithm is needed 
+for low order polynomials. Since this code doesn&#39;t use iteration, it will find 
+4th order roots about seven times faster than P51.</p>
+<p>&nbsp;</p>
+<p><span class="style16">The Name</span><br />
+P51 was named after the American P-51 Mustang used to hunt Zeros in WWII.</p>
+<p><span class="style16">A Utility Program with P51 Implemented</span><br />
+You can try P51 with this <a href="FilterPolynomials.html">Filter 
+Polynomial utility program</a>. This program&#39;s primary purpose is to generate 
+the 2nd order coefficients needed for analog filters, but the P51 root finder 
+can be accessed directly as shown in these two screen shots. The polynomial 
+coefficients are entered in the left pane.</p>
+<p><img alt="RootTableScreenShot.png" src="P51/RootTableScreenShot.png" /></p>
+<p>&nbsp;</p>
+<p>Copyright 2015&nbsp; Iowa Hills Software</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/P51RootFinder.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:42 GMT -->
+</html>

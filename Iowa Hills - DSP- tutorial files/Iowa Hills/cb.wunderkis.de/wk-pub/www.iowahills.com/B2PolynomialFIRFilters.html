@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/B2PolynomialFIRFilters.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:28 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Butterworth and Chebyshev FIR Filters</title>
+<style type="text/css">
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+	font-size: large;
+}
+.style17 {
+	color: #008000;
+}
+</style>
+<meta content="Butterworth FIR filter, Chebyshev FIR filter, Bessel FIR filter, Gauss FIR filter, Inverse Chebyshev FIR filter" name="keywords" />
+<meta content="The use of polynomials as prototypes for FIR filters is discussed." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style17">Polynomial Prototypes for 
+		FIR Filters</span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>This page discusses Butterworth FIR, Chebyshev FIR, Bessel FIR, Gauss FIR, 
+and Inverse Chebyshev FIR filters.</p>
+<p>If done properly, almost any filter response can be implemented as an FIR. As
+<a href="FIRFiltersByFreqSampling.html">detailed here</a>, one simply does an Inverse Fourier Transform on the filter&#39;s 
+frequency response. The catch however, is 
+that some filters will require an excessively large number of taps to implement 
+(as we show below). </p>
+<p>Here are 4 example polynomial FIR filters.</p>
+<p>
+<img alt="4 Polynomial FIR Filter Plots.png" height="634" src="FIR%20Analogs/4%20Polynomial%20FIR%20Filter%20Plots.png" width="872" />&nbsp;</p>
+<p><a href="FIR%20Analogs/200%20Tap%2020%20Pole%20Butterworth%20LPF.txt">200 Tap 
+20 Pole Butterworth FIR Coefficients</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="FIR%20Analogs/256%20Tap%2012%20Pole%20Chebyshev%20LPF.txt">256 Tap 12 
+Pole Chebyshev FIR Coefficients</a><br />
+<a href="FIR%20Analogs/200%20Tap%2015%20pole%20Inv%20Cheby%20LPF.txt">200 Tap 15 
+Pole Inv Chebyshev FIR Coefficients</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="FIR%20Analogs/256%20Tap%208%20Pole%20Elliptic%20LPF.txt">256 Tap 8 Pole 
+Elliptic FIR Coefficients</a>&nbsp;</p>
+<p>&nbsp;</p>
+<p>The filter responses shown above are worst case scenarios for FIR filter 
+design in the sense that they all require a large number of taps to implement. Some polynomials 
+however make excellent FIR filters. In particular, the Bessel, and Gauss polynomials create very useful FIR responses. 
+The polynomials with zeros, such as the Inverse Chebyshev are the next best 
+candidates for FIR prototypes, so long as the pole count isn&#39;t excessive. </p>
+<p>In the next two plots we show the response of a Butterworth 
+and Chebyshev FIR filter as the tap count is reduced. </p>
+<p>
+<img alt="Chebyshev FIR Plots.png" height="420" src="FIR%20Analogs/Chebyshev%20FIR.png" width="567" /></p>
+<p>
+<img alt="Butterworth FIR Plots.png" height="420" src="FIR%20Analogs/Butterworth%20FIR%20Plots.png" width="547" />&nbsp;</p>
+<p>There are essentially two reasons why the Butterworth and Chebyshev make poor 
+FIR prototypes. The first is the shape of the pass band. In particular, I am 
+referring to the relatively sharp corner these two filters have at
+ω = 0.2. Good FIR prototypes (i.e. those requiring the 
+fewest taps), have a more relaxed corner as shown next where we compare a 
+typical FIR response to a typical IIR response (emphasis on the word typical). 
+In order to keep the tap count to a minimum, the FIR prototype must form a 
+relatively large radius at the corner frequency. We will contradict this 
+statement below, but this is essentially true.</p>
+<p>
+<img alt="FIR Filter and  IIR Filter Response Comparison" height="400" src="FIR%20IIR%20Comparison/FIR%20IIR%20Freq%20Response%20Comparison.png" width="522" />&nbsp;</p>
+<p>One of the problems with implementing a polynomial filter as an FIR 
+is the filter&#39;s non-symmetric impulse response, as shown here. </p>
+<p>
+<img alt="FIR Filter and IIR Filter Impulse Response Comparison" height="400" src="FIR%20IIR%20Comparison/FIR%20IIR%20Impulse%20Comparison.png" width="542" />&nbsp;</p>
+<p>Symmetry allows us to apply a window to the impulse response to reduce the 
+sin(x)/x effects, which in turn improves the stop band performance, but symmetry is key. Without symmetry, 
+a window such as the Kaiser cannot be used. Then the only way to minimize the side lobes is to use 
+more taps, which is what we want to avoid.</p>
+<p>The Butterworth and Chebyshev polynomials are poor prototypes 
+for FIR filters. However, as we will show next, some polynomials do work 
+reasonably well.</p>
+<p class="style15">Gauss and Bessel FIR filters</p>
+<p>Good FIR prototypes tend to form a large radius at the corner frequency. 
+Gauss and Bessel filters take this to the extreme. Here we show the frequency 
+response for a 12 pole Gauss filter. The 256 tap response shown here is a true 
+Gaussian response. Notice how little the response changes by reducing the tap 
+count to 20.</p>
+<p>Also notice the group delay. If these were traditional FIR filters, the group delay 
+would be&nbsp; (N-1)/2, or 127.5 and 9.5 respectively. We instead have the group delay 
+typically associated with an IIR filter, and it is affected very little 
+by tap count.</p>
+<p>To be sure, nobody uses a Gauss or Bessel filter for their superb stop band 
+performance. Rather, these filters are used when filter distortion must be kept 
+to a minimum. Which is to say, little or no overshoot or ringing in the step response. The beauty of these FIR filters then is that 
+these 12 pole filters can be implemented with fewer multiplies and adds than in 
+an IIR structure, which is quite rare, and highly desirable, especially since 
+the FIR can also be implemented using integer math.</p>
+<p>Although we don&#39;t show it here, a 12 pole Bessel filter behaves similarly to 
+this.</p>
+<p>
+<img alt="Gauss 12 Pole FIR.png" height="400" src="FIR%20Analogs/Gauss%2012%20Pole%20FIR.png" width="522" /></p>
+<p>&nbsp;</p>
+<p class="style15">Inverse Chebyshev FIR Filters &nbsp;</p>
+
+<p>The Inverse Chebyshev is the only highly selective polynomial filter that 
+works reasonably well as an FIR prototype. Here we compare an Inverse Chebyshev response to a more traditional 
+Kaiser windowed response. As you can see, the Kaiser has somewhat better attenuation characteristics 
+and because of its constant group delay, will distort the signal less. </p>
+<p>
+<img alt="50 Tap Inverse Chebyshev FIR Low Pass and Kaiser Low Pass FIR Filter responses." height="400" src="FIR%20Analogs/50%20Tap%20Inv%20Cheby%20and%20Kaiser%20LPF%20Freq%20Response.png" width="522" /></p>
+<p class="style15">&nbsp;</p>
+<p class="style15">Summary</p>
+<p>In general, the polynomials used for analog and IIR filter design, 
+such as the Butterworth, Chebyshev, Inverse Chebyshev, and Elliptic, are not 
+good prototypes for FIR filters simply because of the tap count needed to 
+implement them. </p>
+<p>We explain the method used to generate FIR filters from these polynomials, or 
+any other custom response, on our <a href="FIRFiltersByFreqSampling.html">
+Frequency Sampling Method for FIR Design</a> page.</p>
+<p>We included the Inverse Chebyshev and Adjustable Gauss prototypes in the
+<a href="5FIRFiltersPage.html" >Iowa Hills FIR Filter Designer</a> (free) so 
+that you can see the merits in trying to use an analog prototype for an FIR 
+filter. </p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+<p></p>
+<p></p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/B2PolynomialFIRFilters.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:31 GMT -->
+</html>

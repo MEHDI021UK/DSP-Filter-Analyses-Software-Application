@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/FilterPolynomials.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:19 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Filter Polynomials and Root Finder</title>
+<style type="text/css">
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style16 {
+	color: #008000;
+	font-size: large;
+}
+</style>
+<meta content="Filter coefficients, Butterworth, Inverse Chebyshev, Elliptic, Gauss, Papoulis, Classic L, Adjustable Gauss, root solver, root finder" name="keywords" />
+<meta content="This free utility program generates the 2nd order coefficients needed for OpAmp and IIR filter designs. It also has a root finder (to 90th order)." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15">Filter Polynomials and Root 
+		Finder </span>&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>This free utility program has two basic functions. The first is to generate the 2nd order coefficients 
+needed for OpAmp and IIR filter designs. The second is a root finder, 
+capable of finding the roots of up to 100th order polynomials. The program is 
+available on the <a href="8DownloadPage.html" >Download Page</a>.</p>
+<p>&nbsp;</p>
+<p><span class="style16">Filter Polynomials</span><br />
+This program generates the coefficients for the following filter polynomials. 
+</p>
+<table style="width: 559px">
+	<tr>
+		<td style="width: 186px">Butterworth</td>
+		<td style="width: 185px">Chebyshev</td>
+		<td style="width: 156px">Inverse Chebyshev</td>
+	</tr>
+	<tr>
+		<td style="width: 186px">Bessel</td>
+		<td style="width: 185px">Gauss</td>
+		<td style="width: 156px">Elliptic</td>
+	</tr>
+	<tr>
+		<td style="width: 186px">Papoulis (Classic L)</td>
+		<td style="width: 185px">Adjustable Gauss</td>
+		<td style="width: 156px">&nbsp;</td>
+	</tr>
+</table>
+<p>These are the same type of normalized filter coefficients found in many texts, 
+except that all of these filters have their 3 dB corner frequency set to Omega = 
+1. It is common for texts to list coefficients for a Bessel filter, for example, 
+with a 3 dB corner well beyond Omega = 1. Having a uniform corner frequency 
+makes it much easier to compare filters.</p>
+<p>The program displays the filter&#39;s frequency and time domain responses.</p>
+<p>
+<img alt="FreqResponseScreenShot.png" src="Polynomials/FreqResponseScreenShot.png" /></p>
+<p>&nbsp;</p>
+<p>It displays the filter&#39;s pole zero locations.</p>
+<p>
+<img alt="RootPlotScreenShot.png" src="Polynomials/RootPlotScreenShot.png" /></p>
+<p>&nbsp;</p>
+<p>It tabulates the roots in a table.</p>
+<p>
+<img alt="RootTable" src="Polynomials/RootTableScreenShot.png" /></p>
+<p>&nbsp;</p>
+<p>And it will generate a file of all the 2nd order coefficients from 2 to 20 poles, 
+similar to this.</p>
+<p>These 2nd order coefficients are in this order: a2, a1, a0<br />
+Chebyshev<br />
+Ripple = 0.0200 dB<br />
+<br />
+2 Poles<br />
+1 , 1.000000000000000 , 1.319489922081053 , 0.933824586809364<br />
+<br />
+3 Poles<br />
+1 , 0.000000000000000 , 1.000000000000000 , 0.809929198186608<br />
+2 , 1.000000000000000 , 0.809929198186608 , 0.913367394267526<br />
+<br />
+4 Poles<br />
+1 , 1.000000000000000 , 1.271744542109480 , 0.550509608567849<br />
+2 , 1.000000000000000 , 0.526773837215708 , 0.921349202219864<br />
+<br />
+5 Poles<br />
+1 , 0.000000000000000 , 1.000000000000000 , 0.589143625908720<br />
+2 , 1.000000000000000 , 0.953254410975662 , 0.572409710882307<br />
+3 , 1.000000000000000 , 0.364110785066942 , 0.936984318484697<br />
+<br />
+6 Poles<br />
+1 , 1.000000000000000 , 0.986238161595112 , 0.310060598024238<br />
+2 , 1.000000000000000 , 0.721976442650947 , 0.629617379601740<br />
+3 , 1.000000000000000 , 0.264261718944166 , 0.949174161179242<br />
+<br />
+7 Poles ........</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span class="style16">P51 Root Finder</span><br />
+The program&#39;s <a href="P51RootFinder.html">P51 Root Finder</a> can handle up to 
+100th order polynomials. The 
+polynomial coefficients are entered on the left, and the roots displayed on the 
+right in one of three formats. The roots can also be plotted in polar format.</p>
+<p>
+<img alt="RootFinderScreenShot.png" src="Polynomials/RootFinderScreenShot.png" /></p>
+<p>The program will also build a polynomial from a set of roots. Simply enter 
+the roots on the right side in the preferred format and press the Build Poly 
+button.</p>
+<p>The program is available on the <a href="8DownloadPage.html" >Download Page</a>.</p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/FilterPolynomials.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:20 GMT -->
+</html>

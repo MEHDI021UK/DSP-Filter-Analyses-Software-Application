@@ -1,0 +1,215 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/9SmithChartPage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:39 GMT -->
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="keywords" content="smith chart, filter, rf,microwave, stability, s parameter plotting, matching networks, impedance matching, Bilateral matching, Pad Calculator, RF Units converter">
+   <meta content="Free Smith Chart program for designing RF matching networks. Q Circles and Bilateral matching are also explained." name="description">
+   <meta name="KeyWords" content="smith chart,filter,rf,microwave,stability">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en]C-DIAL  (Win95; I) [Netscape]">
+   <title>Smith Chart Impedance Matching Software</title>
+   <style type="text/css">
+.style10 {
+	font-size: large;
+	color: #008000;
+}
+.style11 {
+	color: #000000;
+}
+.style13 {
+	font-size: large;
+	color: #0000FF;
+}
+.style14 {
+	color: #008000;
+}
+</style>
+</head>
+<body link="#0000FF" vlink="#800080">
+
+<table style="width: 100%">
+	<tr>
+		<td colspan="2"><span class="style13">Iowa Hills Software&nbsp;&nbsp; Digital and Analog 
+Filters</span></td>
+	</tr>
+	<tr>
+		<td style="width: 45px">
+		<img alt="SCIcon.png" height="36" src="Smith%20Chart/SCIcon.png" width="36"></td>
+		<td><span class="style10">Smith 
+Chart and Bilateral Matching</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="Index.html" >Home</a></td>
+	</tr>
+</table>
+<p>This page describes the free Smith Chart impedance matching program from Iowa 
+Hills Software.</p>
+<p>See this page for a set of useful
+<a href="Smith%20Chart/MatchingCircuitEquations.html" >matching 
+circuit equations</a>.</p>
+<p>Smith Charts allow the user to design impedance matching circuits. This is 
+done by entering a load impedance on the chart, then altering that impedance 
+with series and shunt components. This program allows for the following 
+components to be used.</p>
+<p>
+		<img alt="Matching Elements.png" src="Smith%20Chart/Matching%20Elements.png"></p>
+<p>You may choose to work with ideal components (no parasitics or loss), or you 
+may specify the Q and parasitic reactance associated with your components. It is 
+quite interesting to see the effects of the parasitics, even for the simplest of 
+circuits. It is also nice to be able to adjust a component value 
+after it has been placed. This can be done by selecting the text cell below the 
+schematic symbol and using the arrow keys to modify the value.<p>The program was written for practical use. As such, the user must specify 
+the tolerance for the capacitors and inductors which in turn specifies the 
+discrete values used by the program. For example, if specifying 10% inductors, 
+then the allowed inductor values go as 1.8, 2.2, 2.7, etc. You cannot place a 2.45673 nH inductor 
+for example. The effect of using these discrete values is shown with the short 
+changing color segments. For example, a segment drawn as green, dark green, green, dark green, etc. 
+would represent 1.8, 2.2, 2.7, 3.3 etc. This gives the user a good sense of 
+circuit's sensitivity.<p>The program can also plot S parameter data, along with their stability circles and 
+the stability factor k. The user may match to S11 or S22 directly, or 
+choose to match to the optimal bilateral matching impedance (if k &gt;= 1).
+<p>&nbsp;
+<p><span class="style10">An FAQ</span><br>A frequently asked question when getting started with the Smith Chart is: To match Z to 50 Ohms, do I start on the Smith Chart at Z, or Z conjugate?<p>
+We start at Z, but a simple example shows an important aspect about these 
+matches. Here we match a load of 75 - j100 to 50 Ohms at 1 GHz. 
+Then on the right, we work through the problem in reverse to end up at the 
+conjugate of our load.<p>
+<img alt="Simple Imedance Match" src="Smith%20Chart/Simple%20Match.png"><p>This simple example shows a fundamental 
+fact about circuits. If a circuit is designed for maximum power transfer, then you can break the circuit 
+at any point and looking to the left you will see Z, and to the right you will 
+see Z conjugate. If this isn't the case, maximum power transfer isn't occurring.<p>
+&nbsp;<p class="style10">Q Circles<p>The program allows for Constant Q and
+VSWR circles to be plotted on the chart. Q circles are used as a way to control 
+the bandwidth of the match. The following example should make the point. 
+<p>In the plots below we show two ways to 
+match a load of 118 - j99.5 to 50 Ohms. In the first example, we 
+draw a Q=1 circle on the Smith Chart. We then choose a circuit topology and 
+component values that keeps the impedance traces within the Q Circle. Then we 
+use a Q=6 circle, and do the same thing. Notice the effect on the bandwidth of 
+the match.<p>It should ne noted that in general, these matching circuits are 
+seldom this easy. It is more typically the case that the load being matched to 
+is much further out on the Smith Chart. In other words, the Q of the load is 
+high. In those situations, the bandwidth of the match is controlled by the load, 
+not the matching circuit. The only way to improve the Q of the match (widen its 
+bandwidth) is to add either shunt or series resistance to the match, which of 
+course introduces losses.&nbsp;
+<p>It is worth noting that a transformer traces out the same path on the Smith 
+Chart as a Q Circle. VSWR 
+circles can also be plotted on the chart, but they have little practical value 
+in the design of a matching network.<p class="style14">Q=1 Match<p>
+<img alt="Q Circle Example 1.png" src="Smith%20Chart/Q%20Circle%20Example%201.png"><p>
+<span class="style14">Q=6 Match&nbsp; </span>This match uses values that push the impedance traces out to Q= 6. 
+Note the narrower bandwidth of this match as shown by the return loss plot.<p>
+<img alt="Q Circle Example 2.png" src="Smith%20Chart/Q%20Circle%20Example%202.png"></p>
+<p>
+Q circles show a fundamental fact about matching. It is usually the case that 
+the engineer needs a broadband match, but to have a broadband match, we must 
+stay within a low Q circle. Notice that if the load you are matching to is 
+purely resistive, then it is possible to stay within an arbitrarily low Q 
+circle, but you may need to use a large number of components to get back to 50 
+Ohms.</p>
+<p>
+On the other hand, if the load is highly reactive, 2 + j50 for example, then the 
+load has a Q of 25, and it is impossible to do a lossless broadband match, no 
+matter how many components you use.</p>
+<p class="style10">
+Bilateral Matching</p>
+<p>
+To start, let us make three points about this subject that need to be 
+understood.</p>
+<p>
+1. Bilateral matching is done with 2 port s parameter data. This is typically 
+done when designing the input and output matching circuits for a high frequency 
+transistor. The transistor manufacturer typically supplies the s parameter data.</p>
+<p>
+2. Bilateral matching is only used for devices with |S12| &gt; 0. This is generally 
+the case. The only 2 port devices with S12 = 0 are ideal isolators.</p>
+<p>
+3. If S12 = 0, then there is no path from port 2 to port 1, and the bilateral 
+match reduces to a conjugate match. Or said a bit differently, if 
+S12 for your device is very small, then bilateral matching isn't required and a 
+simple conjugate match will suffice.</p>
+<p>
+The basic idea for bilateral matching is fairly simple. If S12
+<span class="style11">&#8800;</span> 0, then there is a signal path from the output 
+back to the input. The effect of this is that the device's input impedance is affected by 
+the load, and the device's output impedance is affected by what is connected to it's input. Consequently, the only way to match such a device is to 
+calculate the input and output matches simultaneously. We do this by using 
+the device's s parameter data and the equations that follow.</p>
+<p>
+The following is a screen shot from a MathCAD file. The equations were taken 
+from High Frequency Amplifiers by Ralph S Carson, Wiley and Sons, 1982. The 
+final results are the variables Z1opt and Z2opt. These two variables can be a 
+bit confusing. i.e. Are we calculating the impedance of the device, or the 
+impedance the device wants to see.</p>
+<p>
+There is less confusion if one remembers that the outcome of these equations will yield a 
+result fairly close to a simple conjugate match. So it helps to note their value 
+relative the Z1 and Z2 as calculated from S11 and S22. The conjugate of Z1opt 
+and Z2opt are relatively close Z1 and Z2. Thus, the conjugate of Z1opt and Z2opt 
+represent the optimal impedance of the device itself. </p>
+<p>
+Consequently, if using a Smith 
+Chart to calculate a matching network, start at the conjugate of Z1opt and Z2opt 
+(start at the device, as always), and work toward 50 Ohms.</p>
+<p>
+<img alt="MathCad Screen Shot 1.png" height="455" src="Smith%20Chart/MathCad%20Screen%20Shot%201.png" width="561"></p>
+<p>
+<img alt="MathCad Screen Shot 2.png" height="900" src="Smith%20Chart/MathCad%20Screen%20Shot%202.png" width="699"></p>
+<p>
+<a href="Smith%20Chart/BilateralMatch.zip">Bilateral Match Example.zip ( MathCAD 
+8)</a>&nbsp;</p>
+<p>The Iowa Hills Smith Chart program will do these calculations. The user 
+simply needs to read in an s parameter file, and specify the match frequency. </p>
+<p>&nbsp;</p>
+<p class="style10">Antenna Matching</p>
+<p>Many people want to use a Smith Chart to design an input match to an antenna. 
+Be warned however, this probably will not work.</p>
+<p>If you use a network analyzer to measure an antenna's input impedance, you 
+will notice that S11 can be made to move all over the place by moving an object 
+around the antenna. This is a very good sign as it means that the antenna is 
+well coupled to the atmosphere and any changes in the antennas surroundings, 
+which also changes the amount of signal reflected back to the antenna, appear as 
+a change in S11. Only very poor antennas are insensitive to their surroundings.</p>
+<p>It has been my experience that good antennas are also very sensitive to their 
+source impedance. Which is to say, a change in the source impedance also changes 
+the impedance of the antenna. (Emphasis on the word &quot;experience&quot; here, I have no 
+theory to back this statement.) The result of this is; there is not a good way 
+to calculate a matching circuit for antennas.</p>
+<p>It is certainly the case that some low frequency antennas use matching 
+circuits, because they don't have a choice. To the best of my knowledge however, 
+these circuits are either hand tuned, or tuned programmatically in the field, to 
+minimize the reflected power.</p>
+<p>An antenna is supposed to be the impedance matching circuit between 50 Ohms 
+and 377 Ohms. If the antenna isn't presenting 50 Ohms to you, the problem should 
+be fixed by modifying the antenna. A way to think about this is; if an antenna 
+looks reactive, it is by definition storing energy, and this is the last thing 
+you want an antenna to do as it will inevitably lead to losses. Low loss 
+antennas look purely resistive. </p>
+<p>In general, using an impedance matching circuit to fix an antenna's input 
+impedance is a poor approach to take. The final result will likely be a very 
+lossy antenna. Of course, in some situations, you don't have a choice in the 
+matter.</p>
+<p>&nbsp;</p>
+<p class="style10">Miscellaneous Tools</p>
+<p>A pad calculator, units converter, and free-space path loss calculator are 
+built into the program, because it was easy to do and they are handy to have in 
+the lab. Experienced engineers probably have the units and path loss conversions 
+memorized, but the pad calculator is less trivial.</p>
+<p>Calculating the resistor values for a pad isn't particularly difficult, but 
+there are limitations the RF engineer must pay attention to if&nbsp; the load 
+and source are to remain matched. The screen shot below illustrates this point. </p>
+<p>In this example, we want a 3 dB pad between a 50 Ohm Source and a 75 Ohm 
+load. As the program shows however, the minimum attenuation for this 
+configuration is 4.0 dB if both the source and load are to remain matched. If we 
+are willing to allow either the source or the load to be unmatched, then we can use an L pad as shown 
+here. </p>
+<p>
+<img alt="Tools Screen Shot.png" height="1335" src="Smith%20Chart/Tools%20Screen%20Shot.png" width="376"></p>
+<p>This Smith Chart program is free, and available on the
+<a href="8DownloadPage.html" >Download Page</a>.</p>
+<p>RF = ReFined</p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+</body>
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/9SmithChartPage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:41 GMT -->
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A6OpAmpFilterHelpFile.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:35 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>OpAmp Filter Design Hints</title>
+<style type="text/css">
+.style1 {
+	font-size: x-large;
+	color: #008000;
+}
+.style3 {
+	font-size: large;
+	color: #008000;
+}
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style5 {
+	border-width: 0px;
+	font-size: x-large;
+	color: #008000;
+}
+</style>
+<meta content="OpAmp filter, VCVS, MFB, Low pass filter, high pass filter, bandpass filter, Notch filter, Design equations" name="keywords" />
+<meta content="Free OpAmp filter design software uses these methods to generate VCS and MFB filter circuits. Implementation Do's and Don't for OpAmp filters are given." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15"><span class="style5">
+		<span class="style1">OpAmp Filter Design.&nbsp; Do&#39;s and Don&#39;ts</span></span></span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>This page shows the schematics and design equations for VCVS and MFB low 
+pass, high pass, band pass filters. It also gives a number of implementation 
+guidelines for each filter.</p>
+<p>There are many excellent texts on the subject of active filter design. One in 
+particular is: &quot;A Handbook of Active Filters&quot; by Johnson, Johnson, and Moore, 
+1980 Prentice Hall. <br />
+<br />
+As you know, there is an infinite number of ways to design even the simplest of 
+filters. On a simple RC filter, we normally choose one of the component values, 
+somewhat arbitrarily, and calculate the other value. The design of op amp 
+filters takes the same approach.<br />
+<br />
+All of the filter designs start by setting at least one capacitor value, and 
+then calculating the resistor values from that. Some of the filters allow two of 
+the capacitors to be set by the user, while other designs require the second 
+capacitor value to be calculated from the first. <br />
+<br />
+Some of the designs have a maximum allowable capacitor value. These limits come 
+from the design equations and are usually set to prevent a negative value under 
+a square root. <br />
+<br />
+If the filter response isn&#39;t what you expect, remember that the element values 
+are setting the impedance that the op amp must drive. Large capacitor values 
+require an op amp with low output impedance. Remember that many op amps have a 
+relatively high output impedance since they are designed for low power 
+consumption. This is another good reason to simulate these circuits with a Spice 
+simulator and use the correct op amp model.<br />
+<br />
+The filters are designed in sections where each section implements at most 2 
+poles of the filter. Therefore, a 3 pole design has the same number of sections 
+as a 4 pole. Of course, the 1 pole section requires fewer RC components than a 2 
+pole. <br />
+<br />
+The filter’s gain requirements also play a big role in the design. Since 
+implementing gain in a filter section can add complexity, it is probably the 
+case that an engineer will want to put gain in as few sections as possible. For 
+this reason, the gain setting is in dB per section rather than overall gain. If 
+you are designing a 3 pole filter with 6 dB gain, and want to put all of the 
+gain in one of the sections, set the gain to 6 dB to get the values for the 
+section with gain, then set the gain to 0 dB to get the values for the section 
+without gain.<br />
+<br />
+Since the VCVS designs are non-inverting, they must have a gain &gt;= 0 dB. The MFB 
+designs may have gain &lt; 0 dB. <br />
+<br />
+The need for appropriate op amp selection is obvious. It may not be obvious 
+however that its characteristics are just as important in the stop band as they 
+are in the pass band. For example, if you are designing a low pass filter, the 
+op amps bandwidth requirements may be determined by stop band performance, not 
+pass band performance. In other words, don&#39;t assume a 100 kHz op amp will 
+suffice for a 3 kHz low pass filter. If the input signal has a significant 
+amount of high frequency power that needs to be attenuated, a low bandwidth op 
+amp probably won’t get the job done. </p>
+<p><span class="style3">VCVS Low Pass Filter</span> (Voltage Controlled Voltage 
+Source or Sallen Key)</p>
+<p>
+<img alt="VCVS_LPF Help.png" src="OpAmp%20Filters/VCVS_LPF%20Help.png" /></p>
+<p>The design is started by setting the value for C2, somewhat arbitrarily, and 
+then setting C1 per the requirements given above.<br />
+<br />
+The filter gain is non inverting and is given by 1 + R4/R3. For filters with 
+unity gain, the program sets R4 = 0 and shows R3 as Not Used.<br />
+<br />
+The input to this circuit must have a return path to ground (not AC coupled). As 
+such, the DC bias level on the input signal is quite important.<br />
+<br />
+The implementation shows a useful way to offset the DC bias on the input signal. 
+Set the parallel combination of Ra and Rb to R3. The program&#39;s tools menu can 
+help calculate the required bias voltage at the inverting input and the values 
+for Ra and Rb.<br />
+<br />
+As with all op amp circuits, high frequency feedback is very important in order 
+to keep the circuit stable. A small capacitor across R4, typically 10 pF, will 
+accomplish this. The need for this cap becomes more important when high 
+bandwidth op amp&#39;s are used.</p>
+<p>&nbsp;</p>
+<p><span class="style3">MFB Low Pass Filters</span> (Multiple Feed Back)</p>
+<p>
+<img alt="MFB_LPF Help.png" src="OpAmp%20Filters/MFB_LPF%20Help.png" /></p>
+<p>The design is started by setting the value for C2, somewhat arbitrarily, and 
+then setting C1 per the requirements given above.<br />
+<br />
+The filter gain is inverting and equal to R2/R1.<br />
+<br />
+Don&#39;t overlook the DC bias level on your input signal. The inverting terminal 
+has a path to ground via R2, so you may capacitively couple to the input. Of 
+course, this will generate a high pass response that you may not desire.<br />
+<br />
+This circuit is usually shown with the non-inverting terminal tied to ground, 
+which is fine if the input signal doesn&#39;t have a DC bias.
+Depending on the supply voltages and the DC level at the input, you will 
+probably need to apply a voltage to the non-inverting terminal. The program&#39;s 
+tools menu can help calculate Ra and Rb. <br />
+<br />
+This circuit ensures good high frequency stability via C1.<br />
+<br />
+The one pole MFB is implemented by setting R3 and C2 equal to zero. Its corner 
+frequency is set by C1 and R2. If unity gain is needed, the VCVS 1 pole is much 
+simpler to implement. <br />
+</p>
+<p class="style3">VCVS High Pass</p>
+<p>
+<img alt="VCVS_HPF Help.png" src="OpAmp%20Filters/VCVS_HPF%20Help.png" /></p>
+<p>The design is started by setting the values for C1 and C2, somewhat 
+arbitrarily. C1 = C2.<br />
+<br />
+The filter gain is non inverting and is given by 1 + R4/R3. For filters with 
+unity gain, the program sets R4 = 0 and shows R3 as Not Used. One pole sections 
+are shown with R1 and C1 as Not Used.<br />
+<br />
+If the op amp is biased from a single supply the non inverting terminal must be 
+biased to a value appropriate for the gain. The program&#39;s tools menu can help 
+calculate the required values. <br />
+<br />
+Since this filter doesn’t have any capacitive feedback, it is particularly 
+susceptible to high frequency instability. Approximate the capacitance of the 
+traces on your PWB with approximately 3 pF of shunt capacitance at the op amps 
+input terminals. Then do a frequency sweep in a Spice simulator to frequencies 
+greater than the Op Amp’s Gain BW product. Unexpected gain at the high 
+frequencies is a sure sign of trouble.<br />
+<br />
+Adding a small capacitor across R4, typically 10 pF is good way to keep the 
+circuit stable. The need for this cap becomes more important with high bandwidth 
+op amps. This additional cap will, of course, cause high frequency roll off.</p>
+<p>&nbsp;</p>
+<p class="style3">MFB High Pass</p>
+<p>
+<img alt="MFB_HPF Help.png" src="OpAmp%20Filters/MFB_HPF%20Help.png" /></p>
+<p>The design is started by setting the values for C1 and C2, somewhat 
+arbitrarily. The filter&#39;s AC gain is inverting and equal to C2 / C1. <br />
+<br />
+Note: Since the gain is determined by the cap values, it isn&#39;t possible to fine 
+tune the gain. Lower the percent tolerance on the caps to get more precision on 
+the gain setting.<br />
+<br />
+Depending on the supply voltages, you will probably need to apply a voltage at 
+the non-inverting terminal. The program&#39;s tools menu can help calculate Ra and 
+Rb. <br />
+<br />
+Although the feedback cap C2 should ensure good high frequency stability, be 
+careful with this circuit’s input impedance. It is relatively low and 
+capacitive. If you are implementing multiple stages, the op amp needs to be able 
+to drive large capacitive loads.<br />
+<br />
+Be sure to do a frequency sweep in a Spice simulator to frequencies greater than 
+the Op Amp’s Gain BW product. Unexpected gain at the high frequencies is a sure 
+sign of trouble.<br />
+<br />
+The one pole MFB is implemented without R1 and the second C1. Its corner 
+frequency is set by C2 and R2. If unity gain is needed, the VCVS 1 pole is much 
+simpler to implement.</p>
+<p>&nbsp;</p>
+<p class="style3">Band Pass Filters </p>
+<p>
+<img alt="BPF Help.png" height="200" src="OpAmp%20Filters/BPF%20Help.png" width="500" /></p>
+<p>We showed the design equations for the circuits above, but theey are too 
+involved to show here. This is due in part because these filters have a section 
+for each pole (rather than 2 poles per section) and the 2nd order polynomials 
+first need to be factored, and used individually.&nbsp; <br />
+<br />
+It is important to note that the two R4&#39;s are required on the VCVS design. 
+They are an integral part of the filter design and cannot be removed.<br />
+<br />
+Unless the the op amp is biased from a +/- supplies, the non inverting input 
+must be biased to approximately Vcc / 2 on both the VCVS and MFB. <br />
+<br />
+Pay particular attention to the op amp&#39;s bandwidth. You may need as much as 50 x 
+Fo for these implementations.<br />
+<br />
+To ensure stability, it would be wise to place a small cap, approx 10 pF, across 
+R4 on the VCVS. On the MFB, C1 and C2 should provide sufficient high frequency 
+feedbck. </p>
+<p>&nbsp;</p>
+<p class="style3">Notch Filter</p>
+<p>
+<img alt="Notch Help.png" src="OpAmp%20Filters/Notch%20Help.png" /></p>
+<p>This filter doesn&#39;t implement a Butterworth, Chebyshev, or any other 
+polynomial, so all the sections use the same part values. As a consequence, it 
+makes for a poor filter.<br />
+<br />
+If AC coupling is used at the input, then the inverting terminal will need to be 
+biased. </p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A6OpAmpFilterHelpFile.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:36 GMT -->
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A9DiscreteInverseLaPlace.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:42 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Discrete Inverse Laplace Transform, Algorithm and Example</title>
+<style type="text/css">
+.style1 {
+	font-size: x-large;
+	color: #008000;
+}
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style5 {
+	border-width: 0px;
+	font-size: x-large;
+	color: #008000;
+}
+</style>
+<meta content="Inverse Laplace Transform, Fast Fourier Transform, bilinear transform, Step Response, Impulse Response, Control systems" name="keywords" />
+<meta content="This simple method uses the bilinear transform and FFT to obtain the Inverse Laplace of the step response of H(s)." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15"><span class="style5">
+		<span class="style1">
+		Discrete Inverse Laplace Transform</span></span></span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>This page shows an easy way to get a numerical solution to the Inverse 
+Laplace Transform of H(s). This method is useful for obtaining the time domain 
+response of an analog filter, phase lock loop, power control circuit, and other 
+types of control loops. </p>
+<p>It shows delay times and settling times and allows you to see the overshoot 
+and ringing caused by a pulse input. </p>
+<p>&nbsp;</p>
+<p><strong><span class="style15">A Low Pass Filter Example</span><br />
+</strong>In general, low pass responses are the most important to us. In this 
+example we use a low pass filter with a corner frequency (Fc) of 4 kHz.</p>
+<p>The following is a screen shot from a MathCAD file which shows our definition of H(s) and its frequency response.</p>
+<p class="style3">
+<img alt="Fig 1" height="643" src="DILT/Fig%201.png" width="722" /></p>
+<p>Next we show the how we obtain the pulse response for H(s). Note that 
+the time span covered is defined in terms if Fc. We do this because the time 
+span of interest is usually directly related to Fc. For example, if H(s) has a 1 
+kHz&nbsp; bandwidth, there isn&#39;t anything interesting happening 
+beyond 10 / Fc = 10 ms. </p>
+<p><img alt="Fig 2" height="521" src="DILT/Fig%202.png" width="792" /></p>
+<p>
+It is important to note that while this method works fine for a pulse input, but 
+it does not work for an infinitely long step response. The width of the pulse can 
+be as wide as N T seconds, but beyond that this method fails. We show a plot of 
+an infinitely long step response below.<br />
+<br />
+This method also works well for an impulse response. First set g = H(k) (i.e. 
+stop multiplying H(k) by the Laplacian Pulse). Then set MaxFreq to 100 Fc and 
+increase N. Then adjust the vertical scale on the time domain plot.</p>
+<p>
+&nbsp;Although we used a low pass H(s) in this example, 
+this method works well for high pass, band pass, and notch responses as well.<br />
+<br />
+We set MaxFreq to 10 Fc, but a wide range of values works fine. MaxFreq needs to 
+be greater than about 5 Fc and less than N / PW. The size of the FFT can be 
+almost any value, so long as the MaxFreq &lt; N / PW constraint is met.<br />
+<br />
+A way to validate this method is to observe that we can set the width of the 
+pulse and see it drop at the correct time. Another way is to set H(s) to 1 and 
+see the resulting square pulse output as shown here. </p>
+<p>
+<img alt="Fig 4" height="287" src="DILT/Fig%204.png" width="584" /></p>
+<p>
+As another validation of this method, we compare the results from this method to 
+that obtained for an IIR filter. We use an IIR filter&#39;s response because 
+obtaining its pulse response is trivial. The filter is a 4 pole Butterworth high 
+pass. </p>
+<p>
+We offset the analog response on the x axis a bit for a better comparison. The 
+Laplace pulse rises on the first grid line, and falls on the 5th grid line. This 
+shows that the method described here can give a good estimate of waveforms that 
+are rather complicated.</p>
+<p>
+<img alt="Fig 5" height="381" src="DILT/Fig%205.png" width="529" /></p>
+<p><img alt="Fig 3" height="282" src="DILT/Fig%203.png" width="609" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>This <a href="DILT/DILT%20Example.zip">zip file</a> contains the MathCad 
+file shown above. (MathCAD 8)</p>
+<p>&nbsp;</p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A9DiscreteInverseLaPlace.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:44 GMT -->
+</html>

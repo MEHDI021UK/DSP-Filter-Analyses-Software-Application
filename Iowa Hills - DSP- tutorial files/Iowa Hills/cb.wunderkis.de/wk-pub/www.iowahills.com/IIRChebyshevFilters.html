@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/IIRChebyshevFilters.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:26 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Chebyshev IIR Filter Design</title>
+<style type="text/css">
+.style1 {
+	font-size: x-large;
+	color: #008000;
+}
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+</style>
+<meta content="Butterworth, IIR, filter, chebyshev, Gauss, bessel" name="keywords" />
+<meta content="The design of Chebyshev IIR Filters and a comparison to the Butterworth IIR" name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"> <span class="style1">
+		Chebyshev IIR Filters</span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+
+<p>The Chebyshev filter is well known and described in all the texts. Its 
+transition band can be made narrower by adding ripple to the pass band. This 
+also makes the group delay variation and subsequent distortion worse. </p>
+<p>Here are is an example of Chebyshev IIR low pass response. Note the severe 
+ringing in the step response.</p>
+<p>
+<img alt="Chebyshev Low Pass.png" src="IIR%20Polys/Chebyshev%20Low%20Pass.png" /></p>
+<p>
+&nbsp;</p>
+<p>A good way to judge the merits of the Chebyshev is to compare it to the Butterworth. Only 8 
+poles are needed for approximately the same stop band attenuation as a 14 pole 
+Butterworth, but it has pass band ripple, and a peak math value of 78 as 
+compared to 12 for the Butterworth.</p>
+<p>
+<img alt="Butterworth Chebyshev Comparison.png" height="400" src="IIR%20Polys/Butterworth%20Chebyshev%20Comparison.png" width="542" /></p>
+<p>&nbsp;</p>
+<p>The free <a href="4IIRFilterPage.html" >Iowa Hills IIR Filter Designer</a> will synthesize Chebyshev filters 
+up to 20 poles.</p>
+<p>The source code for generating Chebyshev low pass prototype filters is given 
+on our
+<a href="A7ExampleCodePage.html">Example C Code Page</a>. </p>
+
+<p><a href="IIRChebyshevFilters.html" >Chebyshev IIR Filters</a><br />
+<a href="IIRInverseChebyshevFilters.html" >Inverse Chebyshev IIR 
+Filters</a><br />
+<a href="IIREllipticFilters.html" >Elliptic IIR Filters</a></p>
+
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/IIRChebyshevFilters.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:27 GMT -->
+</html>

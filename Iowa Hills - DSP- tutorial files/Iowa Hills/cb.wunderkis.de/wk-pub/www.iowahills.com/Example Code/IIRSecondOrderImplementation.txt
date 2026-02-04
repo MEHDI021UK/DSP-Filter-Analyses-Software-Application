@@ -1,0 +1,168 @@
+/*
+ Sept 20, 2014
+ From: http://www.iowahills.com/A7ExampleCodePage.html
+ If you find a problem with this code, please leave us a note on:
+ http://www.iowahills.com/feedbackcomments.html
+
+ The functions given here implement an IIR filter using second order sections (biquads).
+ Both a Form 1 and Form 2 implementation are given.
+ The intent here is to show the basic algorithms, not to give a working program.
+
+
+An Example:
+These coefficients came from the Iowa Hills IIR filter program.
+They are the two biquad sections for a 4 pole low pass Inverse Chebyshev.
+They can be implemented in either Form 1 or Form 2.
+
+Sect 0
+a0   1.000000000000000000
+a1   -1.02728779783195412
+a2   0.287633847126421427
+b0   0.110688450258806984
+b1   0.038969148776853313
+b2   0.110688450258806984
+
+Sect 1
+a0   1.000000000000000000
+a1   -1.33012033759563986
+a2   0.644119155523180109
+b0   0.087936161148626110
+b1   0.138126495630287949
+b2   0.087936161148626110
+
+Fill the a and b arrays.
+Section 0
+a0[0] = 1.000000000000000000;
+a1[0] = -1.027287797831954120;
+a2[0] = 0.287633847126421427;
+b0[0] = 0.110688450258806984;
+b1[0] = 0.038969148776853313;
+b2[0] = 0.110688450258806984;
+
+Section 1
+a0[1] = 1.000000000000000000;
+a1[1] = -1.33012033759563986;
+a2[1] = 0.644119155523180109;
+b0[1] = 0.087936161148626110;
+b1[1] = 0.138126495630287949;
+b2[1] = 0.087936161148626110;
+
+NumSections = 2;
+
+Fill a Signal array with random numbers from -1  to 1.
+This particular filter has a nominal group delay of 4
+so we set NumSigPts to at least 1000 + 2*4
+
+Remember that these filters have delay, so you need to run the code for M points
+longer than the number of data points to be filtered in order to get the entire
+signal through the filter. A reasonable value for M is twice the group delay value.
+
+double Signal[1100], FilteredSignal[1100];
+for(j=0; j<1000; j++)Signal[j] = (double)random(2000)/1000.0 - 1.0;
+RunIIRBiquadForm1(Signal, FilteredSignal, 1008);
+
+
+
+
+In the code below, we simply set all the array sizes to 100 so that the
+code will work with any size filter. These filters can't have more
+than about 40 sections. The alternative would be to use malloc for all the arrays.
+*/
+
+
+// This code is assuming these are globals.
+#define REG_SIZE 100
+int NumSections; // The number of biquad sections. e.g. PoleCount/2 for even PoleCount.
+double RegX1[REG_SIZE], RegX2[REG_SIZE], RegY1[REG_SIZE], RegY2[REG_SIZE]; // Used in the Form 1 code
+double Reg0[REG_SIZE], Reg1[REG_SIZE], Reg2[REG_SIZE];  // Used in the Form 2 code
+double a2[REG_SIZE], a1[REG_SIZE], a0[REG_SIZE], b2[REG_SIZE], b1[REG_SIZE], b0[REG_SIZE]; // The 2nd order IIR coefficients.
+
+// Form 1 Biquad
+// This uses 2 sets of shift registers, RegX on the input side and RegY on the output side.
+void RunIIRBiquadForm1(double *Input, double *Output, int NumSigPts)
+{
+ double y;
+ int j, k;
+
+ for(j=0; j<REG_SIZE; j++) // Init the shift registers.
+  {
+   RegX1[j] = 0.0;
+   RegX2[j] = 0.0;
+   RegY1[j] = 0.0;
+   RegY2[j] = 0.0;
+  }
+
+ for(j=0; j<NumSigPts; j++)
+  {
+   y = SectCalcForm1(0, Input[j]);
+   for(k=1; k<NumSections; k++)
+	{
+	 y = SectCalcForm1(k, y);
+	}
+   Output[j] = y;
+  }
+}
+
+//---------------------------------------------------------------------------
+
+// Form 1 Biquad Section Calc, called by RunIIRBiquadForm1.
+double SectCalcForm1(int k, double x)
+{
+ double y, CenterTap;
+
+ CenterTap = x * b0[k] + b1[k] * RegX1[k] + b2[k] * RegX2[k];
+ y = a0[k] * CenterTap - a1[k] * RegY1[k] - a2[k] * RegY2[k];
+
+ RegX2[k] = RegX1[k];
+ RegX1[k] = x;
+ RegY2[k] = RegY1[k];
+ RegY1[k] = y;
+
+ return(y);
+}
+
+//---------------------------------------------------------------------------
+
+// Form 2 Biquad
+// This uses one set of shift registers, Reg0, Reg1, and Reg2 in the center.
+void RunIIRBiquadForm2(double *Input, double *Output, int NumSigPts)
+{
+ double y;
+ int j, k;
+
+ for(j=0; j<REG_SIZE; j++) // Init the shift registers.
+  {
+   Reg0[j] = 0.0;
+   Reg1[j] = 0.0;
+   Reg2[j] = 0.0;
+  }
+
+ for(j=0;j<NumSigPts;j++)
+  {
+   y = SectCalcForm2(0, Input[j]);
+   for(k=1; k<NumSections; k++)
+	{
+	 y = SectCalcForm2(k, y);
+	}
+   Output[j] = y;
+  }
+}
+
+//---------------------------------------------------------------------------
+
+// Form 2 Biquad Section Calc, called by RunIIRBiquadForm2.
+double SectCalcForm2(int k, double x)
+{
+ double y;
+
+ Reg0[k] = x - a1[k] * Reg1[k] - a2[k] * Reg2[k];
+ y = b0[k] * Reg0[k] + b1[k] * Reg1[k] + b2[k] * Reg2[k];
+
+ // Shift the register values
+ Reg2[k] = Reg1[k];
+ Reg1[k] = Reg0[k];
+
+ return(y);
+}
+
+//---------------------------------------------------------------------------

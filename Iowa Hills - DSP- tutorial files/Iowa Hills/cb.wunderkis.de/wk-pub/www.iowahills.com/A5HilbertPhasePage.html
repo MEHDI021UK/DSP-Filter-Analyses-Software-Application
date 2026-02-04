@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A5HilbertPhasePage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:16 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Hilbert Transform Filters&nbsp; Software and Examples</title>
+<style type="text/css">
+.style4 {
+	font-size: large;
+	color: #008000;
+}
+.style5 {
+	font-size: x-large;
+	color: #008000;
+}
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style16 {
+	font-family: "Times New Roman";
+}
+</style>
+<meta content="Hilbert Phase, Hilbert Transform, Group Delay, phase linearity, single sideband, FIR differentiator filter" name="keywords" />
+<meta content="Free software for Hilbert Transform FIR Filters. Hilbert transforms and their phase properties are described as well as other types of phase adjusted FIR bandpass filters." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15"><span class="style5">Hilbert Transform 
+		Filters, 
+and Other <br />
+		Phase Adjusted Band Pass Filters</span></span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>Hilbert Transform filters are just one of the several types of Special Phase 
+Adjusted Filters that are possible. A band pass filter is the only filter type 
+that allows us to set the phase to any value we desire. The other three filter 
+types are constrained by the fact their phase is predetermined at zero and 
+<span class="style16">±</span>Pi.</p>
+<p><span class="style4">A brief look at the ideal Hilbert Transform.</span><br />
+To start, here is an ideal Hilbert Transform. It&#39;s phase response is 90 degrees all frequencies.</p>
+<p>
+<img alt="Ideal Hilbert Time Domain Plot.png" src="Hilbert%20Phase/Ideal%20Hilbert%20Time%20Domain%20Plot.png" /></p>
+<p>Notice however, that this waveform starts before t = 0. This is fine for pure 
+mathematical constructs, but a serious problem for engineers that want to 
+implement it in hardware (it is non-causal). Thus, to implement a Hilbert Transform, we must move this waveform to the right. This is the same as saying 
+we will give it delay, which is the same as saying we must change its constant 90 degree phase into a phase with slope. The 
+amount of slope is determined by the amount of delay we give it.</p>
+<p>
+&nbsp;</p>
+<p><span class="style4">Hilbert Transform Filters.</span><br />
+To start, we show the frequency response for a 65 tap, 90 degree, Hilbert 
+Transform Filter. <br />
+<br />
+A Hilbert Filter can be confusing because it would seem that the 
+phase plot should be a constant 90 degrees, but as you can see, the phase 
+for this Hilbert filter is anything but constant.&nbsp;The reason of course, 
+is the delay we are forced to use in order to construct this filter. <br />
+<br />
+The phase plot on the right is what we expect to see, but this is Hilbert Phase, 
+not ordinary phase. Hilbert Phase is the phase of the response after it has been 
+multiplied by the Laplace time delay operator as described
+<a href="A5HilbertPhaseDescription.html" >
+here</a> .</p>
+<p>
+<img alt="Hilbert Phase Plots" height="329" src="Hilbert%20Phase/Hilbert%20Filter%20Phase%20Plots.png" width="792" /></p>
+<p>A constant 90 degree Hilbert Phase means that a filter will add 90 degrees more phase to a signal 
+than a reference device with the same group delay as the filter. This diagram 
+illustrates this point. In the diagram, the reference device is a delay line. 
+Delay lines have perfectly linear phase at all frequencies starting at DC. The 
+phase at DC is zero, and the slope of the phase is determined by the length of 
+the delay. <br />
+<br />
+As the diagram shows, a Hilbert Transform Filter will have 90 degrees more phase 
+shift at all frequencies in its pass band than the delay line.</p>
+<p>
+<img alt="Hilbert Phase Diagram.png" src="Hilbert%20Phase/Hilbert%20Phase%20Diagram.png" /></p>
+<p>One use for a Hilbert Transform Filter is in the generation of single 
+sideband. In order to generate single sideband, we must add a 180 and 0 degree 
+phase shifted version of the signal to itself, as shown in the diagram below. In 
+this type of single sideband generator, the Hilbert Filter must be paired with a 
+delay line that is the same length as the filters group delay (typically (N-1)/2). </p>
+<p>
+<img alt="90 Degree Single Side Band Diagram" height="199" src="Hilbert%20Phase/Single%2090%20SSB%20Diagram.png" width="411" /></p>
+<p>
+This is a plot of the single side band spectrum using a 65 tap Hilbert 
+Transform filter.</p>
+<p>
+<img alt="SSB Spectrum Plot.png" src="Hilbert%20Phase/SSB%20Spectrum%20Plot.png" /></p>
+<p>
+&nbsp;</p>
+<p class="style4">Phase Adjusted FIR Band Pass Filters.</p>
+<p>The Iowa Hills Hilbert Filter Designer synthesizes a number of special band 
+pass filters. Band pass filters are different from low pass, high pass, and 
+notch filters, in that the phase of the filter isn&#39;t predetermined at zero and 
+Pi. The phase must be zero at 0 Hz for a low pass and notch, and the phase must 
+be zero at Pi for a high pass and notch (180 deg if these filters invert the 
+signal). Only the band pass, which has a magnitude of zero at DC and Pi, allows us to 
+set its phase to any value in the pass band .</p>
+<p>
+This plot shows how the phase of a 31 tap band pass filter can be adjusted from 
+-135 to +135 degrees. The group delay is 15 for all phases, and the magnitude 
+varies a small amount as the phase is adjusted.</p>
+<p>
+<img alt="Phase Adjusted FIR Filter Plots" height="400" src="Hilbert%20Phase/Phase%20Add%20Plots.png" width="512" /></p>
+<p>&nbsp;</p>
+<p>This diagram shows how we can use a pair of phase shifted band pass 
+filters to generate single side band. Instead of using a single Hilbert filter 
+with 90 degrees of phase shift, we used a pair of matched filters with a 90 
+degrees phase difference between them. There are two advantages to this. First, 
+we can generate narrow band SSB, and second, the filter&#39;s pass band need not be 
+flat at 0 dB to attain good side band suppression. The two filters simply need 
+to be matched.&nbsp;&nbsp; </p>
+<p>
+<img alt="Dual 45 SSB Diagram.png" height="199" src="Hilbert%20Phase/Dual%2045%20SSB%20Diagram.png" width="411" /></p>
+<p>
+This is a plot of one of the 45 degree Hilbert&#39;s used to generate SSB. Note that 
+the bandwidth is not full width, as is typically the case for Hilbert filters.</p>
+<p>
+<img alt="Dual 45 degree Single Side Band FIR Filter Response" height="400" src="Hilbert%20Phase/Dual%2045%20Filter%20Response.png" width="512" /></p>
+<p>
+<img alt="Single Side Band FIR Filter Performance Plot" height="400" src="Hilbert%20Phase/Dual%2045%20SSB%20Performance.png" width="522" /></p>
+<p class="style5">
+&nbsp;</p>
+<p class="style4">
+Differentiator Band Pass Filter</p>
+<p>
+This plot shows the response of a 32 tap differentiator. The magnitude plot is 
+linear (not in dB) and shows a 6 dB per octave slope.</p>
+<p>
+<img alt="Differentiator Plot" height="400" src="Hilbert%20Phase/Differentiator%20Plot.png" width="512" /></p>
+<p>&nbsp;</p>
+<p class="style4">
+Mixed Band Pass Filter</p>
+<p>Here is a dual band pass response obtained by mixing a filter&#39;s coefficients 
+with a local oscillator.</p>
+<p>
+<img alt="100 Tap Mixed BPF Response.png" height="400" src="Hilbert%20Phase/100%20Tap%20Mixed%20BPF%20Response.png" width="542" /></p>
+<p>&nbsp;</p>
+<p><span class="style4">Screen shot of the free Hilbert Filter program.</span>&nbsp;
+<a href="8DownloadPage.html" >Available on the Download Page</a></p>
+<p>
+<img alt="Hilbert Screen Shot.png" height="600" src="Hilbert%20Phase/Hilbert%20Screen%20Shot.png" width="585" /></p>
+<p>The program&#39;s test bench allows the user to test these filters in a single 
+sideband generator (an excellent way to test for gain and phase flatness).&nbsp;
+<a href="8DownloadPage.html" >Available on the Download Page</a></p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A5HilbertPhasePage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:19 GMT -->
+</html>

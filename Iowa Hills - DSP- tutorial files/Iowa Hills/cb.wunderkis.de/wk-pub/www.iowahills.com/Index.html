@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/Index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:02 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Iowa Hills Software - Analog and Digital Filter Design Software</title>
+<style type="text/css">
+.style8 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style9 {
+	color: #008000;
+}
+.style11 {
+	font-weight: normal;
+	color: #000000;
+}
+.style12 {
+	font-size: x-large;
+	color: #FF0000;
+}
+.style14 {
+	color: #000000;
+}
+.style15 {
+	font-size: x-large;
+}
+</style>
+<base  />
+<meta content="IIR Filter, FIR Filter, RF Filter, Op Amp Filter, Smith Chart, Example C Code, FFT, Hilbert Transform, " name="keywords" />
+<meta content="Free IIR, FIR, RF, and Op Amp Filter Software - C Code for IIR, FIR, and the FFT - Smith Chart Software." name="description" />
+</head>
+
+<body style="background-color: #FFFFFF">
+
+<p><span class="style8">Iowa Hills Software</span>&nbsp;&nbsp; 
+<span class="style9"><br />
+		<span class="style15">Digital and Analog Filters</span></span></p>
+<p>Filter design was one of my specialties as an RF engineer. Now that I am 
+retired, I work on these filter design programs when it is too cold in Iowa to 
+ride bicycle. The programs are free.</p>
+<p>&nbsp;</p>
+<p><span class="style12">Filter Design Programs</span><br />
+<a href="5FIRFiltersPage.html">FIR Filters:</a>&nbsp; This FIR program synthesizes both Parks McClellan and Fourier filters (windowed). 
+It is also capable of synthesizing filters from polynomials such as the Bessel 
+and Inverse Chebyshev.</p>
+<p><a href="4IIRFilterPage.html">IIR Filters:</a> 
+This IIR filter program uses the Bilinear Transform method. It can synthesize 
+filters up to 20 poles from all the classic polynomials, from the Gauss to the 
+Elliptic.</p>
+<p><a href="9RFFiltersPage.html" >RF Filters:</a> 
+This RF Filter program synthesizes 
+filters constructed of inductors, capacitors, and transmission lines. Its main 
+focus is the synthesis of Direct Coupled and Norton Transformed band pass 
+filters. </p>
+<p><a href="6OpAmpFilterPage.html">OpAmp Filters:</a> 
+This OpAmp filter program synthesizes VCVS and MFB all pole filters (not 
+Elliptics or Inverse Chebyshevs). It synthesizes filters, up to 20 poles, from the Butterworth, Chebyshev, Bessel, 
+Gauss, and Adjustable Gauss polynomials.</p>
+
+<p><a href="A5HilbertPhasePage.html">Hilbert Filters:</a> 
+(Special Phase Adjusted Filters) Band pass filters are unique in that we are 
+able to set their phase to any value desired. Hilbert Transform filters are a 
+classic example of this. This page starts with an explanation of Hilbert Phase, 
+and then shows how the Hilbert Filter program can be used to design 
+a number of special band pass filters.</p>
+<p><a href="FilterPolynomials.html" >Filter 
+Polynomials and Root Finder:</a> This utility programs generates the 2nd 
+order filter coefficients needed for the design of OpAmp and IIR filters. The 
+program also has a root finder capable of finding the roots of 90th order 
+polynomials.</p>
+<p><a href="8DownloadPage.html" >Download 
+Page:</a>&nbsp; These programs are available here.</p>
+<p>&nbsp;</p>
+<p><span class="style12">Filter Design Methods</span><br />
+<a href="A4IIRBilinearTransform.html" >IIR Filter Design 
+		Using the Bilinear Transform:</a> This page develops the equations used 
+to generate IIR filters from the s domain coefficients of analog filters using 
+the Bilinear Transform.</p>
+<p><a href="FIRFiltersByFreqSampling.html">The FIR Frequency Sampling 
+Method</a> This page shows a method for designing FIR filters by over sampling 
+the frequency domain. It shows how to define a custom response (magnitude and 
+phase) and also shows how to properly sample a filter polynomial, such as the 
+Butterworth, to create an FIR filter. </p>
+<p><a href="IIRChebyshevFilters.html">Chebyshev IIR Filters</a>,
+<a href="IIRInverseChebyshevFilters.html">Inverse Chebyshev IIR Filters</a>, and
+<a href="IIREllipticFilters.html">Elliptic IIR Filters</a> These pages show the 
+merits in using these polynomials for IIR filters (as compared the Butterworth).</p>
+<p><a href="B2PolynomialFIRFilters.html">FIR Filter Responses Using Polynomial 
+Filters:</a> This page discusses using the polynomial filters, such as the Butterworth 
+and Chebyshev, as prototypes in the design of FIR filters. </p>
+<p><a href="A8FirIirDifferences.html">The Differences Between FIR and IIR 
+Filters:</a> For those who are new to digital filters, this page describes some 
+of the most important differences between FIR and IIR filters.</p>
+<p><a href="7AdjustablePolyPage.html" >Adjustable 
+Gauss Transitional Filter:</a> This page describes the Adjustable Gauss 
+polynomial, a new transitional filter 
+polynomial capable of generating a response anywhere between a Gaussian and Butterworth response.</p>
+<p><a href="A6OpAmpFilterHelpFile.html" >OpAmp Filter Design 
+Guidelines:</a> This page discusses various guidelines for designing op amp 
+filters.</p>
+<p>&nbsp;</p>
+<p><span class="style12">Example C Code for FIR and IIR Filters</span><br />
+<a href="A7ExampleCodePage.html">FIR and IIR Filters:</a><span class="style14"> Th</span><strong><span class="style11">is 
+page has code for synthesizing and implementing digital filters. Algorithms for </span> 
+</strong>windowed and Parks McClellan FIR filters are given as well as the code 
+for calculating IIR filter coefficients using the Bilinear Transform.</p>
+<p>&nbsp;</p>
+<p><span class="style12">Smith Chart Program</span><br />
+<a href="9SmithChartPage.html" >Smith 
+Chart:</a> The Smith Chart is a classic tool for designing RF matching 
+networks. This Smith Chart program also does bilateral matching with s 
+parameters and has some built in tools for RF engineers.</p>
+<p>&nbsp;</p>
+<p><span class="style12">Other Topics<br />
+</span><a href="P51RootFinder.html">Polynomial Root Finder</a>: This page gives 
+short description of the P51 root finder, as well as the source code. It is for 
+polynomials with real coefficients, up to 100th order.</p>
+<p><a href="A9DiscreteInverseLaPlace.html" >
+Discrete Inverse Laplace Transform:</a>&nbsp; This 
+is an easy method for obtaining the time domain response of H(s). </p>
+<p>
+<a href="B1GroupDelay.html" >Group 
+Delay:</a>&nbsp; This discussion of group delay describes the effects of 
+non linear phase. It also relates group delay to the amount of time needed for a 
+signal to pass through a filter.</p>
+<p><a href="feedbackcomments.html">Comments Page</a>:&nbsp; 
+Let us know what you think.</p>
+<p>
+&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/Index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:08 GMT -->
+</html>

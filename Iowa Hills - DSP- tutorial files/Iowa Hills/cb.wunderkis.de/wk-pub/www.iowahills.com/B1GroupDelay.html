@@ -1,0 +1,236 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/B1GroupDelay.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:44 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>What is Group Delay</title>
+<style type="text/css">
+.style1 {
+	font-size: x-large;
+	color: #008000;
+}
+.style3 {
+	color: #008000;
+	font-size: large;
+}
+.style4 {
+	text-decoration: underline;
+}
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style5 {
+	border-width: 0px;
+	font-size: x-large;
+	color: #008000;
+}
+.style16 {
+	font-family: "Times New Roman";
+}
+</style>
+<meta content="Group Delay, Phase, FIR filter, step response" name="keywords" />
+<meta content="An explanation of Group Delay without equations. It is much easier to undersatand by examining its effects on the step response of a low pass filter." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15"><span class="style5">
+		<span class="style1">What is Group Delay</span></span></span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a></p>
+<p>This page explains group delay, and its effects, without any math. </p>
+<p>The basic idea of group delay is reasonably simple; the negative derivative 
+of phase with respect to frequency. But for most people, this doesn&#39;t mean much, 
+which is unfortunate, because group delay is an important way to describe a 
+filter&#39;s pass band characteristics. Our purpose here is to show why it is 
+important. </p>
+<p><span class="style3">Why the Name &quot;Group Delay&quot;</span><br />
+We all understand ordinary time delay (phase shift), but what is
+<span class="style4">group</span> delay. Consider a simple example of a square 
+wave, which as you know, is composed of a large <span class="style4">group</span> 
+of frequency components. A square wave is square only because its frequency 
+components are in proper phase alignment with one another. If we pass a square 
+wave through a device and expect it to remain square, then we need to ensure 
+that the device doesn&#39;t misalign these frequency components. A Group Delay 
+measurement shows us how much a device causes these frequency components to 
+become misaligned. </p>
+<p>This may sound like a trivial matter, but as we show below, misaligning the 
+phase between a group of frequency components can destroy a signal. In short, we 
+want all frequency compontents to experience the same amount of delay (in 
+seconds, not phase angle) as they pass through a device. </p>
+<p><span class="style3">Why Does a Filter Generate a Phase Shift</span><br />
+Let&#39;s start by answering this frequently asked question. To 
+start with, a better question would be, is it possible to construct a device 
+that doesn&#39;t generate a phase shift, and the answer is no. </p>
+<p>Lets consider the simplest device possible, a piece of wire of length L where 
+the signal can travel at the speed of light. Clearly, it takes L/c seconds for 
+the signal to get through this device. The simple fact that time is required for 
+a signal to pass from a device&#39;s input to its output means that it generates a 
+phase shift. It&#39;s just that simple.</p>
+<p>As compared to other electrical devices however, filters have significant amounts of 
+phase shift, and the longer the filter (i.e. the more poles it 
+has, or the more taps it has) the more delay it has. In the 
+case of digital filters, this delay is usually discussed in terms of samples, 
+not seconds. </p>
+<p><span class="style3">Group Delay Describes Phase Shift </span><br />
+Let&#39;s start by making it clear that group delay is a measurement of time, so 
+let&#39;s compare group delay to ordinary time delay (phase shift). </p>
+<p>Here we compare the time delay to the group delay of a low pass filter. It turns out that the 
+time delay and the group delay of 
+a filter take on similar values in the pass 
+band where the filter&#39;s phase response is linear. For an FIR filter with constant group delay, the 
+time delay and the group delay 
+are equal at all frequencies. For a filter with non-linear phase however, 
+such as the Butterworth filter shown here, the delay is close to the group delay 
+in the pass band.</p>
+<p>
+<img alt="Delay Group Delay.png" src="Group%20Delay/Delay%20Group%20Delay.png" /></p>
+<p>This plot makes it obvious that we cannot in general equate time delay and group delay, but this 
+comparison helps to simplify the topic a bit. i.e. Group Delay is a measurement 
+of time, and is similar in value to ordinary time delay in the filter&#39;s pass band where the phase is 
+most linear. Here is another example 
+using the more phase linear Gauss filter.</p>
+<p>
+<img alt="Delay Group Delay Gauss.png" src="Group%20Delay/Delay%20Group%20Delay%20Gauss.png" /></p>
+<p>&nbsp;In loose terms, Group Delay is the amount of 
+time required for a signal to propagate through a device. </p>
+<p><span class="style4">More importantly</span> however, the group delay curve indicates how much a device will distort 
+a signal. A device with constant 
+group delay (linear phase) equates to <span class="style4">minimal</span> distortion, 
+but as we will show with examples below, non linear phase is a contributor to 
+distortion, not the sole reason for it.</p>
+<p><span class="style3">Group Delay vs. Signal Propagation Time</span><br />
+We said that in loose terms, the group delay is a measurement of the 
+time needed for a signal to propagate through a device. To demonstrate this, we 
+send a square pulse through a low pass filter. This particular filter has a group delay of 
+40, 
+and as can be seen, the mid point of the pulse&#39;s leading edge 
+occurs at the output at t=40. It&#39;s just that simple.</p>
+<p>
+<img alt="Group Delay Plot 1.png" src="Group%20Delay/Group%20Delay%20Plot%201.png" /></p>
+<p>Note: For those not familiar with digital filters, t=40 means 40 sample 
+times. If the filter&#39;s clock is running at 1 MHz, t=40 means 40µs. This 
+signal propagation behavior is the same for analog filters.</p>
+<p>We used a low pass filter and a square pulse in this example because the 
+effect of group delay is so readily seen, but keep in mind that a sine 
+wave would have the same 40 sample delay. Since this filter has the same group 
+delay at all frequencies, a sine wave at any frequency experiences the same 
+delay time.</p>
+<p><span class="style3">Why is the Step Response Important?</span><br />
+Please remember that all signals passing through a device will experience the 
+same distortion, but we use a step response to measure distortion for two 
+reasons. First, a step input contains all frequencies, so using it is a bit like 
+doing a frequency sweep, but in the time domain. Second, since you know the exact shape of the input signal, any variations to that 
+shape make the distortion readily apparent. Distortion would be much harder to 
+detect if we used an audio signal, for example. </p>
+<p><span class="style3">Why is Group Delay Important?</span><br />
+In most cases, we are not particularly concerned with a filter&#39;s delay 
+(i.e. the amount of 
+time it takes for a signal to propagate through the filter). We are concerned 
+however that each of the signal&#39;s frequency components experience the same delay 
+so that their phase relative to one another is maintained. Or said a bit 
+differently, we want our signals to maintain their shape as they pass through a 
+device.</p>
+<p>In principle, the filter shown above has <span class="style4">perfect</span> group delay, but the pulse 
+was still distorted by the filter. The filter slowed the pulse&#39;s rise time and 
+gave it overshoot. So there is more to be concerned with than just group delay. 
+As you know, the square wave entering the filter had an infinite number of 
+frequency components, and the filter did its job by attenuating the higher 
+frequencies. So, in this respect, there is no way for a low pass filter to not 
+affect a square wave, so we must expect some distortion. </p>
+<p>This plot compares the distortion caused by two filters. Both of these FIR 
+filters have the <span class="style4">same ideal group delay</span>, but they attenuate the high frequencies 
+differently. This difference has a clear effect on the distortion of the pulse. </p>
+<p>
+<img alt="Same Delay Comparison.png" src="Group%20Delay/Same%20Delay%20Comparison.png" /></p>
+<p>Here we show the converse of the example above where two filters have 
+the <span class="style4">same magnitude response</span>, but have different group delay responses. The effect of nonlinear phase 
+is clear. The step response for the filter with non linear phase  
+has significantly more overshoot and ringing than the filter with constant group 
+delay. Also note the time delay differences, which of course, coincides with the 
+different group delay values.</p>
+<p>
+<img alt="Same Magnitude Comparison.png" src="Group%20Delay/Same%20Magnitude%20Comparison%202.png" /></p>
+<p>
+<span class="style3">An Extreme Example of Group Delay Distortion</span><br />
+You are probably familiar with the term &quot;all pass filter&quot;, and you 
+have probably wondered why a device that passes all frequencies is called a 
+filter.</p>
+<p>
+Let us explain that the pass band of an all pass filter is defined by its group 
+delay response, not it&#39;s magnitude response. The key to using an all pass filter 
+is to make sure that the frequency content of the signal is within the filter&#39;s 
+pass band. In this example, the square wave is virtually destroyed by 
+the filter because it has significant frequency content well beyond the filter&#39;s 
+pass band (where it group delay is flat). </p>
+<p>
+BTW: All pass filters are used to delay a signal in order to align it with 
+another signal. This IIR example would delay the signal by 10 samples. If we had 
+used an FIR all pass, which would have constant group delay at all frequencies, 
+there would be no distortion.</p>
+<p>
+<img alt="IIR All Pass Example.png" height="321" src="Group%20Delay/IIR%20All%20Pass%20Example.png" width="744" /></p>
+<p>
+<span class="style3">Group Delay as a Measure of Phase</span><br />
+Now let&#39;s show group delay as it is defined, the negative derivative of the 
+phase.</p>
+<p>
+It should be clear that as the tap count is increased for an FIR filter, the 
+group delay increases as well, simply because the filter is getting longer. 
+Similarly, as the pole count is increased for IIR and analog filters, the group 
+delay increases, again, because the filter is getting longer.</p>
+<p>
+Or said a bit differently, as the filter gets longer, the slope of the phase 
+curve gets steeper.
+Here we compare the slope of the phase for two FIR filters with different group 
+delays. The first has 10 taps and the other 14 taps. The 14 tap filter is longer so its phase has more negative slope 
+(more 
+group delay) .</p>
+<p>
+<img alt="Phase and GD.png" height="400" src="Group%20Delay/Phase%20and%20GD%202.png" width="464" /></p>
+<p><span class="style3">Negative Group Delay</span><br />
+We want to make it clear that, in general, the group delay for a physical device (as 
+opposed to a pure mathematical construct) cannot be negative. If it were, the signal would appear at the 
+device&#39;s output before it entered the device. </p>
+<p>It is possible however to construct an active circuit (not a passive circuit) 
+with negative group delay. One simply needs to a place a pole in the right hand 
+plane, which of course makes the circuit unstable. The circuit will want to 
+oscillate at the pole frequency, which is fine if you are designing an 
+oscillator, but not very useful otherwise.</p>
+<p>While not negative, the <span class="style4">
+ideal</span> Hilbert Transform has no group delay, because its phase is a 
+constant <span class="style16">± </span>90 degrees (making the derivative zero), but it cannot be 
+implemented in hardware. Only in mathematics can we construct a filter with 
+constant phase. The phase of a filter implemented in hardware must vary with 
+frequency. Therefore, if we want to implement a Hilbert 
+Transform in hardware, we must give it some delay.</p>
+<p>&nbsp;</p>
+<p>Our purpose here was to try to give some meaning to the term Group Delay. The 
+more signal processing experience you get, the more attention you will pay to 
+group delay curves. It isn&#39;t a complicated subject, but it does take a bit of 
+experience to understand its significance.</p>
+<p>To understand this topic better, try downloading our free
+<a href="5FIRFiltersPage.html">FIR Filter Design software</a> and experiment 
+with low pass filter design. In particular, use the minimum group delay switch 
+to toggle between linear and non-linear group delay and watch the effect on the 
+step response.</p>
+<p>&nbsp;</p>
+<p>
+&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/B1GroupDelay.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:45 GMT -->
+</html>

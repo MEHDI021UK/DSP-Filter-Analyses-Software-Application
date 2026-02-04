@@ -1,0 +1,356 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/FFTCode.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:49 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>FFT Algorithm in C and Spectral Analysis Windows</title>
+<style type="text/css">
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style18 {
+	color: #0000FF;
+}
+.style19 {
+	font-size: large;
+	color: #008000;
+}
+</style>
+<meta content="FFT Code in C, Fast Fourier Transform, C, C++, FFT Butterfly Flowchart, spectral analysis window" name="keywords" />
+<meta content="The C code for a decimation in time FFT algorithm is given as well as the code for several spectral analysis windows." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15">FFT Algorithm 
+	in C and Spectral Analysis Windows </span>&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html" >Home</a>&nbsp;&nbsp; </p>
+<p>This is the C code for a decimation in time FFT algorithm. It puts DC in bin 0 and scales 
+the output of the forward transform by 1/N. The output is returned in the 
+input array.&nbsp; The code, in plain text, is given here:&nbsp; <a href="Example%20Code/WebFFTCode.txt">FFT 
+Algorithm in C</a></p>
+<p>There are many ways to interface to an FFT. Some use one double 
+array for both the input and output, while others use two complex arrays. Some 
+algorithms put DC in the center bin while others put DC in bin 0. Some do no 
+scaling on a forward transform. <br />
+<br />
+Consequently, there is no way to write an FFT that meets everyone&#39;s needs, but 
+it isn&#39;t difficult to modify an algorithm to suit your needs. <br />
+<br />
+The <strong>only</strong> difficulty in writing an FFT is 
+calculating the array indexes, the rest of the code is trivial. We included the 
+output of some debug code that shows how the indexes change. Compare this output to a
+<a href="Example%20Code/FFTButterfly.html" >Length 16 FFT Butterfly Chart</a>.<br />
+<br />
+An unfortunate aspect of C compilers is that there is little uniformity in their 
+complex math libraries. For example, a compiler might access the real part as 
+X.re, X.real, or X.real(). This makes it difficult to have portable code when 
+complex numbers are used.<br />
+<br />
+The good thing however is that there are only 2 lines of code (in Transform) 
+that do complex math. Thus, it should be quite easy modify this code to suit 
+your compiler.<br />
+<br />
+This code stresses simplicity and clarity, not speed. Once you understand an algorithm 
+however, it isn&#39;t difficult to improve it&#39;s execution times. 
+Here are some obvious things you can do to optimize this code. </p>
+<ol>
+	<li>Make use of symmetry when calculating the twiddle factors (more 
+	important than it might seem). </li>
+	<li>Use a temporary variable in the main transform loop, rather than doing 
+	the complex multiplications twice. </li>
+	<li>Make use of the fact that Twiddle[0] = 1 and Twiddle[N/4] = +/- j. They 
+	get used very often.</li>
+	<li>If you do a large number of successive FFTs, stop the repeated memory 
+	allocations and Twiddle calculations.</li>
+	<li>You will notice on a butterfly chart that the upper and lower halves of the 
+	chart can be processed independently until the last section. Since most PC&#39;s 
+	have at least 2 cores, process the upper and lower halves in separate 
+	threads.</li>
+</ol>
+<p>Twenty years ago, computer memory was expensive, so FFT algorithms were written to 
+minimize their memory requirements. They typically did this by placing intermediate 
+calculation results directly back into the input array and in some cases, 
+calculating the twiddle factors as needed.<br />
+<br />
+This code uses a temporary buffer array to store intermediate results and 
+another array for the pre-calculated twiddle factors. This uses more memory 
+but simplifies the code immensely and makes it very easy to associate a
+butterfly chart with the code. <br />
+<br />
+There is also a Discrete Fourier Transform at the bottom of the file. It is 
+useful for checking the FFT code, should you decide to modify it.<br />
+<br />
+The transform function code is shown here. It is nothing more than two lines of 
+code for the transform, and indexing. The entire algorithm, which includes 
+the code for reordering, twiddle factor calculations, memory allocation, and 
+scaling, is in this plain text file. <a href="Example%20Code/WebFFTCode.txt">FFT Algorithm in C</a></p>
+<pre>void Transform(ComplexD *Input, ComplexD *Buffer, ComplexD *Twiddle, int N)
+{
+ int j, k, J, K, I, T;
+ ComplexD *TempPointer;
+
+ J = N/2;     // J increments down to 1
+ K = 1;       // K increments up to N/2
+ while(J &gt; 0) // This loop runs Log2(N) times.
+  {
+   // Swap pointers, instead doing this: for(j=0; j&lt;N; j++) Input[j] = Buffer[j];
+   // We start with a swap because of the swap in ReArrangeInput function.
+   TempPointer = Input;
+   Input = Buffer;
+   Buffer = TempPointer;
+
+   I = 0;
+   for(j=0; j&lt;J; j++)
+    {
+     T = 0;
+     for(k=0; k&lt;K; k++) // This loop runs N/2 times for each J and K
+      {
+       Buffer[I]   = Input[I] + Input[K+I] * Twiddle[T];
+       Buffer[K+I] = Input[I] - Input[K+I] * Twiddle[T];
+       I++;
+       T += J;
+      }
+     I += K;
+    } // end for(j=0 loop
+   K *= 2;
+   J /= 2;
+  } // end while(J &gt; 0) loop
+
+}</pre>
+<p>Getting the indexes correct is the only difficult part of an FFT algorithm. This print out shows how the indexes 
+for Buffer, Input, and Twiddle change. Compare them to this
+<a href="Example%20Code/FFTButterfly.html" >16 Pt FFT Butterfly Chart</a>.
+</p>
+<pre>N = 16
+J = 8    K = 1
+Buffer[0]  = Input[0]  + Input[1]  * Twiddle[0]
+Buffer[1]  = Input[0]  - Input[1]  * Twiddle[0]
+Buffer[2]  = Input[2]  + Input[3]  * Twiddle[0]
+Buffer[3]  = Input[2]  - Input[3]  * Twiddle[0]
+.
+.
+.
+Buffer[14] = Input[14] + Input[15] * Twiddle[0]
+Buffer[15] = Input[14] - Input[15] * Twiddle[0]
+
+J = 4    K = 2
+Buffer[0]  = Input[0]  + Input[2]  * Twiddle[0]
+Buffer[2]  = Input[0]  - Input[2]  * Twiddle[0]
+Buffer[1]  = Input[1]  + Input[3]  * Twiddle[4]
+Buffer[3]  = Input[1]  - Input[3]  * Twiddle[4]
+Buffer[4]  = Input[4]  + Input[6]  * Twiddle[0]
+.
+.
+.
+Buffer[14] = Input[12] - Input[14] * Twiddle[0]
+Buffer[13] = Input[13] + Input[15] * Twiddle[4]
+Buffer[15] = Input[13] - Input[15] * Twiddle[4]
+
+See the code file for the complete listing.
+</pre>
+<p>&nbsp;</p>
+<p><span class="style19">Spectral Analysis Windows for the FFT</span><br />
+There are numerous types of spectral analysis windows one can use with an 
+FFT, as described in this 
+<a href="http://en.wikipedia.org/wiki/Window_function" >Wikipedia article</a>. </p>
+<p>This <a href="http://holometer.fnal.gov/GH_FFT.pdf">The <span dir="auto">Max 
+Planck Institute for Gravitational Physics</span></a><span dir="auto"> (pdf) 
+article does a nice job of explaining the basics of using windows for spectral 
+analysis.</span></p>
+<p>This 
+<a href="Example%20Code/WindowedFIRFilterWebCode.txt">Windowed FIR Filter C Code</a> 
+has the following windows defined in the lower half of the file. The code in the 
+top half of the file is used to generate the impulse response for an FIR filters. 
+These windows are used for both FIR filter design and spectral analysis. </p>
+<table style="width: 511px">
+	<tr>
+		<td>Hanning</td>
+		<td>Hamming</td>
+		<td>Blackman</td>
+	</tr>
+	<tr>
+		<td>Blackman Harris</td>
+		<td>Blackman Nuttall</td>
+		<td>Nuttall</td>
+	</tr>
+	<tr>
+		<td style="height: 23px">Kaiser</td>
+		<td style="height: 23px">Kaiser Bessel</td>
+		<td style="height: 23px">Trapezoid</td>
+	</tr>
+	<tr>
+		<td>Sinc</td>
+		<td>Flattop
+		<a href="http://www.bth.se/fou/forskinfo.nsf/0/130c0940c5e7ffcdc1256f7f0065ac60/$file/ICOTA_2004_ttr_icl_mdh.pdf" >
+		defined</a></td>
+		<td>Tukey</td>
+	</tr>
+	<tr>
+		<td>Gauss</td>
+		<td>Sine</td>
+		<td>&nbsp;</td>
+	</tr>
+	</table>
+<p>&nbsp;</p>
+<p><span class="style19">Do You Need to Use a Window Before the FFT ?</span><br />
+In general, the answer to this question is yes. If you are somewhat new to FFT&#39;s 
+and windows, you will soon learn that while the FFT is the only tool available 
+for spectral analysis, it is imperfect at best in measuring the spectral content 
+of an arbitrary signal. The question isn&#39;t whether you need to window the data, 
+but rather, which window is best suited for the task at hand. In other words, do 
+you need good spectral resolution, or good amplitude accuracy. You can&#39;t have 
+both. </p>
+<p>The problem with the FFT is that it assumes that each sine wave component in 
+the signal is present for an integer number of cycles, but this is seldom the 
+case. </p>
+<p>To illustrate, we show a signal composed of three sine waves with an integer 
+number of cycles of each plus a DC component. Since this signal is periodic, no window is required and the FFT 
+displays the signal&#39;s spectrum with perfection.</p>
+<p>
+<img alt="Two Tone Signal" src="Example%20Code/SignalWithNoWindow.png" /></p>
+<p>Notice however, that in this situation, a window degrades the performance of 
+the FFT. Consider the width of the DC component. These windows have the effect 
+of modulating the signal. The steady state DC component in this signal became a very low 
+frequency component upon application of the window. In fact, all the frequency components are modulated, which 
+accounts for the width of the spectral lines. </p>
+<p>It should be clear from the plots 
+below that the Flattop will modulate the signal the most, which causes it to 
+produce the widest spectral lines. This is referred to 
+in the literature as the 
+window&#39;s bandwidth, in units of bins. These three windows have  
+bandwidths of: Hanning = 1.5,&nbsp; Gauss = 2.17,&nbsp; Flattop = 3.77 bins.</p>
+<p>
+<img alt="Hanning And Flattop Window Plots.png" src="Example%20Code/HanningAndFlattopPlots.png" /></p>
+<p>Next, we add a half cycle to each sine wave. Note how the presence of the 
+third frequency component is completely masked unless a window is used.</p>
+<p>
+<img alt="Signal With Windows.png" src="Example%20Code/SignalWithWindows.png" /></p>
+<p>It should be clear that each window type has its own distinct properties. 
+There are many types of windows, and massive amounts of literature describing 
+them. </p>
+<p>When choosing a window, you must trade off between resolution and amplitude 
+accuracy. The Hanning has the best resolution while the Flattop has the best 
+amplitude accuracy. The Gauss is midway between these two for both accuracy and 
+resolution. It may be worth noting that these were the only windows used in the 
+HP 89410A Vector Signal Analyzer. In other words, unless you have very specific 
+requirements, these three are probably the best to get started with. It is also 
+worth noting that there are many flattop window definitions.</p>
+<p>&nbsp;</p>
+<p><span class="style19">When to Scale the FFT by 1/N ?</span><br />
+If you look at the definition of the Fourier Transform, you will not find a 1/N 
+scaling factor. Yet most FFT&nbsp; algorithms automatically scale the output of 
+a forward transform by 1/N, but do not scale the output of the inverse 
+transform. </p>
+<p>This short discussion will try to make it clear when scaling by 1/N is 
+appropriate and why it is typically built into an FFT algorithm on the forward 
+transform.</p>
+<p><strong>Must scale a forward transform by 1/N.<br />
+</strong>To start with, it ought to be clear that to analyze a simple sine wave, the 
+length of the transform should be irrelevant. Suppose 
+N=1024, Freq=100 and your signal is:</p>
+<p>f(n) = cos(Freq * 2*Pi * n/N)</p>
+<p>If you take a 1024 point FFT of f(n), you will find that bin[100] = 512. But 
+this isn&#39;t a meaningful value until you scale it by 1/N. Then 512/1024 = 1/2 and of 
+course the other 1/2 is in the negative spectrum at bin[924]. If you then double 
+the length of the FFT, the output values also double.</p>
+<p>Clearly, the length of the FFT should be irrelevant, but it clearly has an 
+effect. So in this situation we scale the FFT by 1/N</p>
+<p><strong>Must not scale a forward transform.<br />
+</strong>Now suppose you have the impulse response of a 32 tap FIR filter and want to 
+know its frequency response. For convenience, we will assume a low pass filter 
+with a gain of 1. We know that for this type of filter, the DC component of the FFT must 
+be 1 (the gain of the filter). </p>
+<p>We also know that the FFT&#39;s DC component is simply the sum of its input 
+values (i.e. the sum of the FIR coefficients in this example). Clearly, this sum 
+will be the same regardless the length of the FFT, so clearly it must not be 
+scaled by 1/N to give a meaningful result. Thus, for this type of input, the 
+output of the forward transform is not scaled.</p>
+<p><span class="style18"><strong>What is the fundamental difference between these two examples?</strong></span>
+<br />
+The answer is simple. In the first case, we supplied energy for every input 
+sample. In other words, the sine wave was present for all N samples, so we 
+needed to scale the FFT&#39;s output by 1/N.</p>
+<p>The second example was an impulse response of a filter. By definition, we only supplied energy for 1 sample 
+(the impulse at n=0). It took 32 samples for the impulse to work its way through 
+the 32 tap filter, but this delay is irrelevant. Since we supplied energy for 1 
+sample, we don&#39;t scale the FFT&#39;s output. If we had supplied energy for two 
+samples, we would scale the output by 1/2.</p>
+<p><strong>Must not scale an inverse transform.<br />
+</strong>Now let&#39;s consider an inverse FFT. As with the forward FFT, we must consider 
+the number of samples we are supplying energy to. Of course, we have to be a bit 
+more careful here because we must fill both the positive and negative frequency 
+bins appropriately. However, if we place an impulse (i.e. a 1) in two 
+appropriate bins, then the resulting output of the inverse FFT will be a cosine 
+wave with an amplitude of 2 no matter how many points we use in the inverse FFT.
+</p>
+<p>Thus, as with the forward FFT, we don&#39;t scale the inverse FFT&#39;s output if the 
+input is an impulse.</p>
+<p><strong>Must scale an inverse transform.<br />
+</strong>Now consider the case where you know the frequency response of a low 
+pass filter and want to do an inverse FFT to get its impulse response. In this 
+case, since we are supplying energy at all points, we must scale the FFT&#39;s 
+output by 1/N to get a meaningful answer. </p>
+<p><strong><span class="style18">Another example.</span><br />
+</strong>The four situations just detailed are end point examples where it is 
+clear how to scale the FFT&#39;s output. However, there is a lot of gray area 
+between the end points. So let’s consider another simple example.</p>
+<p>Suppose we have the following signal, with N=1024, Freq=100:</p>
+<pre><code>f(n) = 6 * cos(1*Freq * 2*Pi * n/N)  n = 0 - 127
+f(n) = 1 * cos(2*Freq * 2*Pi * n/N)  n = 128 - 895
+f(n) = 6 * cos(4*Freq * 2*Pi * n/N)  n = 896 - 1023</code></pre>
+<p>
+<img alt="TwoTones.png" src="Example%20Code/TwoTones.png" />&nbsp;</p>
+<p>Notice the amplitude, frequency, and duty cycle differences for the three 
+components. It should be clear that while the second component is at 1/36 the
+<strong>power</strong> level as the other two, all three frequency components 
+deliver the same amount of <strong>energy</strong> to the FFT, as shown in the 
+plot below. 
+It is important to remember that&nbsp; the FFT&#39;s output has units of energy, not 
+power. (This is easily forgotten because virtually all spectrum analyzer plots are labeled in terms of power, not 
+energy.)</p>
+<p>
+<img alt="TwoToneSpectrum.png" height="250" src="Example%20Code/TwoToneSpectrum.png" width="478" />&nbsp;</p>
+<p>If we know the duration of the various frequency components, we can then 
+scale the various frequency bins accordingly. In this case, we would scale the output 
+as follows: bin[100] /= 128; bin[200] /= 768; bin[400] /= 
+128; Then the FFT&#39;s output would be more meaningful (in terms of power).</p>
+<p>In general however, we have no idea what the duty cycle is for the various 
+frequency components that make up our signal, so we can&#39;t 
+possibly do this sort of scaling. In general however, we do supply energy for 
+every sample point, which is why we scale the forward FFT by 1/N when 
+analyzing a signal. </p>
+<p>To complicate matters, we would almost certainly apply a window to this 
+signal to improve the FFT&#39;s spectral resolution. Since the first and third 
+frequency components are at the beginning and end of the signal, they get 
+attenuated by 27 dB while the center component gets attenuated by only 4 dB 
+(Hanning window).</p>
+<p>
+<img alt="TwoToneSpectrumWithWindow.png" height="254" src="Example%20Code/TwoToneSpectrumWithWindow.png" width="496" />&nbsp;</p>
+<p>Clearly, the output of an FFT <strong>can be</strong> a very poor 
+representation of the input.</p>
+<p>The problems are similar when using a spectrum analyzer, analog or FFT. You don&#39;t know the actual power of the signal unless you also 
+know its duty cycle. But even then, the windowing, span, sweep rates, filtering, 
+detector type, and other factors, all work to distort the result.</p>
+<p>Using an FFT to analyze an arbitrary signal is not fool proof. You must 
+understand the input signal in order to understand the FFT&#39;s output. This is 
+also true when using an analog spectrum analyzer.</p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/FFTCode.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:51 GMT -->
+</html>

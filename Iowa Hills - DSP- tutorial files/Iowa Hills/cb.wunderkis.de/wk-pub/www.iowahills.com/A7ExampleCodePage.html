@@ -1,0 +1,398 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A7ExampleCodePage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:36 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Example C code for FIR Filters and IIR Filters</title>
+<style type="text/css">
+.style4 {
+	font-size: large;
+	color: #000000;
+}
+.style5 {
+	font-size: x-large;
+	color: #008000;
+}
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style13 {
+	font-size: x-large;
+}
+.style15 {
+	color: #008000;
+}
+.style16 {
+	color: #000000;
+}
+.style18 {
+	color: #800000;
+}
+.style19 {
+	font-size: large;
+	color: #800000;
+}
+.style20 {
+	text-align: center;
+}
+.style22 {
+	border-width: 1px;
+	text-align: left;
+}
+.style23 {
+	border-style: solid;
+	border-width: 1px;
+}
+.style24 {
+	border-width: 1px;
+}
+.style25 {
+	border-width: 1px;
+	text-align: center;
+}
+.style26 {
+	font-size: small;
+}
+</style>
+<meta content="IIR Filter C Code, FIR Filter C Code, Parks McClellan C++, FFT algorithm,  Hanning Window, Kaiser Window, Bilinear Transform" name="keywords" />
+<meta content="C++ source code for IIR Bilinear Transform, Parks McClellan FIR and Windowed FIR filters, Fast Fourier Transform, and code for implementing IIR and FIR filters." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style15"><span class="style5">Example 
+		C Code for FIR and IIR Filters</span></span></span>&nbsp;&nbsp;&nbsp;&nbsp;<a href="Index.html" >Home</a></p>
+<p><span class="style19">FIR and IIR Source Code Kit. </span><br />
+This kit contains the C code necessary to generate both IIR and FIR low pass, 
+high pass, band pass, notch, and all pass filters. </p>
+<p>For FIR filters, the kit contains code for both Rectangular Windowed FIR and 
+Parks McClellan FIR. The code will also generate FIR filters with the frequency 
+sampling method. Two frequency sampling methods are given. The first allows the 
+user to define the magnitude response for a linear phase filter. The second uses 
+the magnitude and phase response defined by a low pass prototype filter, such as 
+the Butterworth. The code for several windows such as the Kaiser is given as 
+well as the code for making fractional delay adjustments.</p>
+<p>For IIR filters, the kit contains the bilinear transform code and the root 
+finder code needed for band pass and notch filters. The IIR code generates 
+biquad coefficients, but the additional code needed to generate Nth order 
+coefficients is also included. </p>
+<p>While previous versions of this kit had the low pass prototype coefficients 
+tabulated, the kit now contains the code to calculate the poles and zeros for, 
+and generate the second order s plane factors for, the following filter 
+polynomials: Butterworth, Chebyshev, Gauss, Bessel, Adjustable Gauss, Papoulis 
+(Classic L), Inverse Chebyshev, and Elliptic. 1 to 20 poles. </p>
+<p>The kit also comes with a small utility program that will plot the magnitude 
+response of FIR and IIR filters.</p>
+<p><a href="Downloads/Iowa%20Hills%20Source%20Code%20Kit.zip">Code Kit Download (zip)</a>
+&nbsp;<span class="style26">Updated 9/23/16</span></p>
+<table class="style23">
+	<tr>
+		<td class="style25" colspan="2"><strong>Kit Contents For Filter Design</strong></td>
+	</tr>
+	<tr>
+		<td class="style22"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FIR</strong></td>
+		<td class="style22"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; IIR</strong></td>
+	</tr>
+	<tr>
+		<td class="style24">Rectangular Windowed FIR&nbsp;&nbsp;&nbsp;&nbsp; </td>
+		<td class="style24"><a href="A4IIRBilinearTransform.html">Bilinear Transform Code</a></td>
+	</tr>
+	<tr>
+		<td class="style24">Parks McClellan FIR</td>
+		<td class="style24">Low Pass Prototypes (s plane)</td>
+	</tr>
+	<tr>
+		<td class="style24">Windows (Kaiser, Sinc, etc)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</td>
+		<td class="style24">Form 1 Biquad&nbsp; Implementation&nbsp;&nbsp;&nbsp; </td>
+	</tr>
+	<tr>
+		<td class="style24">Implementation Code</td>
+		<td class="style24">Frequency Analysis Code.</td>
+	</tr>
+	<tr>
+		<td class="style24">Frequency Analysis code.</td>
+		<td class="style24"><a href="P51RootFinder.html">Root Finder (up to 
+		100th order)</a></td>
+	</tr>
+	<tr>
+		<td class="style24">Frequency Correction Code</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>Fractional Delay Adjustment</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td><a href="FIRFiltersByFreqSampling.html">FIR by Frequency Sampling</a></td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td class="style20" colspan="2"><strong>Kit Contents for Spectral 
+		Analysis</strong></td>
+	</tr>
+	<tr>
+		<td>FFT Algorithm.</td>
+		<td>2 DFT Algorithms</td>
+	</tr>
+	<tr>
+		<td valign="top">Goertzel Algorithm.</td>
+		<td>Spectral Analysis Windows. <br />
+		(Hanning, Gauss, Flattop, etc.)</td>
+	</tr>
+	</table>
+<p>&nbsp;</p>
+<p><strong>The kit is a subset of the following: </strong></p>
+<p><span class="style19">IIR Filters</span><strong><span class="style15"> </span>
+</strong><br />
+See this page for
+		<a href="A4IIRBilinearTransform.html" >IIR Filter Design 
+		Equations and C Code</a>. It gives the equations used 
+to generate IIR filters from the s domain coefficients of analog filters using 
+the Bilinear Transform. The design equations for low pass, high pass, band 
+pass, and notch filters are given.</p>
+<p>&nbsp;</p>
+<p><span class="style18"><strong>FFT Algorithm and Spectral Analysis Windows</strong></span><strong>
+</strong><br />
+See this page for an
+<a href="FFTCode.html">FFT Algorithm in C.</a>&nbsp;
+The only difficult part of writing an FFT algorithm is 
+generating the various array indexes, the rest of the code is trivial. The 
+associated Butterfly 
+Chart is also given as well as ways to optimize an FFT for speed. The need for 
+windows is discussed, and an explanation is given for when an FFT&#39;s output 
+should be scaled by 1/N. </p>
+<p>&nbsp;</p>
+<p><a name="Parks Algorithm"></a><span class="style19">Parks McClellan C++ Source Code<br />
+</span>Here are two versions of the Parks McClellan algorithm translated from 
+Fortran to C. Both files are essentially straight c, and should compile with 
+few, if any changes. We started with the original Parks McClellan Fortran code 
+given in this
+<a href="http://en.wikipedia.org/wiki/ParksâMcClellan_filter_design_algorithm" >Wikipedia article</a>. </p>
+<p>In the first file we tried to keep the changes to a minimum. We then used 
+the 
+<a href="https://github.com/scipy/scipy/blob/master/scipy/signal/sigtoolsmodule.c" >SciPy code</a> to check ours against. As we noted in the file, there are small differences between our translation and the SciPy code that you 
+may want to look at. Search for &quot;SciPy&quot; in our file for the notes.</p>
+<p>We then decided to make extensive changes to the code in an 
+effort to improve it&#39;s readability. We eliminated 62 of the original 69 
+goto statements, added two functions, deleted the Hilbert and Differentiator 
+code, and deleted or renamed numerous variables. We had hoped to eliminate all 
+the goto statements, but there are 4 in the Remez function so intertwined that 
+we couldn&#39;t see a way to eliminate them. We tested our new code by comparing its 
+output to the coefficients from our original translation on more than 1000 
+different filters. We also compared some filters to the filters generated by 
+other programs on the web.</p>
+<table>
+	<tr>
+		<td colspan="2" style="height: 49px">We also included some code in the 
+		second program to calculate and range check the band edges. 
+		This makes for a simpler function call, but more importantly, 
+		restricting the band edge values helps to ensure convergence.</td>
+	</tr>
+	<tr>
+		<td valign="top">The 1st program&#39;s input:</td>
+		<td valign="top">&quot;64,1,3,0.0,0.1,0.2,0.35,0.425,0.5,0.0,1.0,0.0,10.0,1.0,10.0&quot;</td>
+	</tr>
+	<tr>
+		<td valign="top">The 2nd program&#39;s call:</td>
+		<td valign="top">NewParksMcClellan(NumTaps, OmegaC, BW, ParksWidth, PassType);</td>
+	</tr>
+</table>
+<p>We removed the Hilbert Transform code from the second version because Parks McClellan doesn&#39;t generate 
+a good Hilbert transform. Hilbert filters are used in applications that require 
+little or no ripple. For example, when used to generate single sideband, the 
+ripple must typically be less than 0.01 dB in order to achieve the desired 
+sideband suppression. So it is counter productive to synthesize the filter with 
+an algorithm that creates ripple by design. Thus, its a matter of using the 
+right tool for the job, and the Fourier Transform is a much better tool for 
+synthesizing Hilbert filters. See our <a href="A5HilbertPhasePage.html">Hilbert 
+Filters</a> 
+page for examples.</p>
+<table>
+	<tr>
+		<td style="width: 202px; height: 23px;" valign="top"> <a href="Example%20Code/ParksMcClellan2.txt">Parks 
+McClellan C++</a></td>
+		<td style="height: 23px" valign="top">This code has the minimum number of changes to get 
+		to a C translation and is comparable to the SciPy code.</td>
+	</tr>
+	<tr>
+		<td style="width: 202px" valign="top"><a href="Example%20Code/NewParksMcClellan.txt">
+		New Parks McClellan C++</a></td>
+		<td valign="top">This code has the changes described above. It does more 
+		error checking and has a more friendly call.</td>
+	</tr>
+</table>
+<p>On the left is an example of a 32 tap Parks McClellan filter for 3 transition 
+bandwidth settings. On the right is a 32 Tap Kaiser Filter (generated by the 
+window code given below).</p>
+<p>
+<img alt="Parks Kaiser 32 Taps.png" height="291" src="Example%20Code/Parks%20Kaiser%2032%20Taps.png" width="747" /></p>
+<p><a name="Parks Algorithm0"></a><span class="style4"><a name="Kaiser Filters">
+</a>
+</span></p>
+<p><span class="style19"><br />
+C Code for Windowed FIR Filters.<br />
+</span><span class="style16">If you are writing a program to generate FIR 
+filters, or want to implement an algorithm in MathCAD, then by all means, start 
+with a windowed filter. These are very good filters and can be generated with less than 10 lines of code.<br />
+<br />
+This 
+<a href="Example%20Code/WindowedFIRFilterWebCode.txt">Windowed FIR Filter C Code</a> has two parts, the first is the calculation of the impulse response 
+for a rectangular window (low pass, high pass, band pass, or notch). Then a window (Kaiser, Hanning, etc) 
+is applied to the 
+impulse response. There are several windows to choose from, but we recommend you 
+start with the Kaiser because you can adjust its transition bandwidth and 
+sidelobe levels. The Sinc window is also adjustable and also very good.<br />
+<br />
+An example of a 32 tap Kaiser filter 
+generated by this code is shown above.</span></p>
+<table style="width: 511px">
+	<tr>
+		<td colspan="3">The file contains code for these windows.</td>
+	</tr>
+	<tr>
+		<td>Hanning</td>
+		<td>Hamming</td>
+		<td>Blackman</td>
+	</tr>
+	<tr>
+		<td>Blackman Harris</td>
+		<td>Blackman Nuttall</td>
+		<td>Nuttall</td>
+	</tr>
+	<tr>
+		<td style="height: 23px">Kaiser</td>
+		<td style="height: 23px">Kaiser Bessel</td>
+		<td style="height: 23px">Trapezoid</td>
+	</tr>
+	<tr>
+		<td>Sinc</td>
+		<td>Flattop</td>
+		<td>Tukey</td>
+	</tr>
+	<tr>
+		<td>Sine</td>
+		<td>Gauss</td>
+		<td>&nbsp;</td>
+	</tr>
+	</table>
+<p>For an implementation of the algorithms given here, see our free
+<a href="5FIRFiltersPage.html" >FIR Filter Designer</a> 
+. It is also capable of synthesizing filters from 
+adjustable non rectangular windows such as the Raised Cosine, and polynomials such as the Bessel. 
+The Parks McClellan algorithm is also implemented.</p>
+<p>&nbsp;</p>
+<p><span class="style19">Frequency Sampling FIR Filter Design (over sampling).<br />
+</span><a href="FIRFiltersByFreqSampling.html">This page</a><span class="style16"> 
+describes a method for designing FIR filters by over sampling the frequency 
+domain. It shows how to define a custom response (magnitude and phase) and also 
+shows how to properly sample a filter polynomial, such as the Butterworth, to 
+create an FIR filter. Example C code is also given.</span></p>
+<p>&nbsp;</p>
+<p><span class="style18"><strong>The code below</strong></span> is for 
+implementing and analyzing FIR and IIR filters. This code was clipped from our <a href="5FIRFiltersPage.html" >FIR</a> and <a href="4IIRFilterPage.html" >
+IIR</a> filter design programs, but clipping code from a program isn&#39;t without its hazards. 
+There may be an omission, such as an undeclared variable, but the essence of 
+the code (the technique) should be clear.&nbsp; </p>
+<p><span class="style19">IIR Filter Implementation Code<br />
+</span>Because of the numerical difficulties associated with IIR filters, many 
+different ways have been developed to implement them. Highly selective IIR 
+filters are particularly susceptible to register overflow and round off errors 
+which can destroy the filter&#39;s performance. 
+We give the code for the four implementations discussed in most textbooks. We 
+list them here in order of their numerical performance. <br />
+1.&nbsp; Form 1 Biquad&nbsp; (Best)<br />
+2.&nbsp; Form 2 Biquad<br />
+3.&nbsp; Form 1 Nth Order Poly<br />
+4.&nbsp; Form 2 Nth Order Poly&nbsp; (Worst, not recommended)</p>
+<p><span class="style19">Code for Biquad Implementations (2nd Order Sections). </span><br class="style18" />
+These structures implement an IIR filter as a series of 2nd order sections. 
+These are preferred over an Nth order implementation for numerical reasons. The 
+Form 1 implementation is the better of the two. Note the minus sign next to a0. 
+You may need to make a sign change depending on how your IIR coefficients are 
+generated.</p>
+<p>
+<img alt="IIR 2nd Order Diagram.png" src="Example%20Code/IIR%202nd%20Order%20Diagram.png" /><br />
+<a href="Example%20Code/IIRSecondOrderImplementation.txt">IIR Filter Biquad 
+Implementation Code</a></p>
+<p>
+&nbsp;<span class="style19">Code for Nth Order Polynomial Implementations.<br />
+</span>These structures implement an IIR filter as a single Nth order 
+polynomial. These implementations are <strong>not</strong> well suited for a 
+fixed point processor because of the peak math values generated, especially Form 
+2. This code is a bit simpler than the biquad code however. <br />
+<br />
+Form 2 is quite similar 
+to the way FIR filters are typically implemented, but FIR filters don&#39;t have the 
+same numerical problems because they don&#39;t have any feedback (the 
+denominator).</p>
+<p>
+<img alt="IIR Nth Order Diagram.png" src="Example%20Code/IIR%20Nth%20Order%20Diagram.png" /><br />
+<a href="Example%20Code/IIRNthOrderImplementation.txt">IIR Filter&nbsp; Nth 
+Order Implementation Code</a></p>
+<p>&nbsp;</p>
+<p><span class="style19">Code to Implement FIR filters.<br />
+</span>There are two methods given here for implementing an FIR filter. The 
+first is a straight forward implementation of an FIR flowchart that uses a loop 
+to shift the delay register values. The second implements the same flowchart, 
+but rotates register indexes rather than the register values. It is more 
+efficient, but not quite as easy to follow.<br />
+<a href="Example%20Code/FIRFloatingPtImplementation.txt">FIR Filter Floating Pt. 
+Implementation Code</a> <br />
+</p>
+<p>&nbsp;</p>
+<p><span class="style19">Calculating a Digital Filter&#39;s Frequency Response.<br />
+</span>The frequency response of an FIR filter is usually obtained by taking the FFT 
+of the coefficients. Simply zero pad the coefficients to give a convenient FFT 
+length. Take note however that most FFT algorithms scale a forward transform by 
+1/N&nbsp; (the FFT length), but this scaling isn&#39;t appropriate when doing 
+the transform of an impulse response. So, depending on your FFT,&nbsp; you may 
+need to multiply the output by N to get the correct gain. </p>
+<p>We can also do a Discrete Fourier 
+Transform of the coefficients. The best reason for using this approach is that 
+it allows us to choose the evaluation frequencies, rather than be restricted to 
+the FFT&#39;s bin frequencies. </p>
+<p>Another approach is to use the Goertzel algorithm. This algorithm is 
+typically used to detect a single tone at a given frequency, but if you only 
+need the magnitude response of your filter at a single frequency, it is simpler 
+and faster than a single frequency DFT, but doesn&#39;t provide phase information.</p>
+<p>This file has two DFT implementations and a Goertzel implementation.<br />
+<a href="Example%20Code/FIRFrequencyAnalysis.txt">Frequency Analysis Code for 
+FIR Filters</a></p>
+<p>&nbsp;</p>
+<p>As with an FIR filter, the easiest way to analyze an IIR filter&#39;s frequency 
+response is to run an impulse through the filter and FFT the output. This 
+approach becomes impractical however if the filter has a very narrow bandwidth. 
+Then a very large FFT is required in order to get good resolution in the 
+filter&#39;s pass band, which can be cumbersome.</p>
+<p>Another approach is to do two FFT&#39;s on the Nth order numerator and 
+denominator coefficients, and divide the results, but this has the same problem 
+just mentioned for highly selective filters.</p>
+<p>This method does a DFT on the filter&#39;s second order coefficients. Its main 
+advantage is that it&nbsp; allows 
+you to restrict your analysis frequencies to the band of interest.<br />
+<a href="Example%20Code/IIRFrequencyAnalysis.txt">Frequency Analysis Code for 
+IIR Filters</a></p>
+<p>&nbsp;</p>
+<p><span class="style19">Polynomial Root Finder Source Code.<br />
+</span>This page gives a short description of the <a href="P51RootFinder.html">
+P51 Root Finder</a>. It is for polynomials with real coefficients, up to 100th 
+order.</p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+<p class="style4">&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/A7ExampleCodePage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:13:39 GMT -->
+</html>

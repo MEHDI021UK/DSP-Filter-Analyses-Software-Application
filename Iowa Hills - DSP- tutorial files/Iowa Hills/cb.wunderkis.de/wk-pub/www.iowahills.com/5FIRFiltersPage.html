@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/5FIRFiltersPage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:08 GMT -->
+<head>
+<meta content="en-us" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>FIR Filter Design, Software and Examples</title>
+<style type="text/css">
+.style16 {
+	color: #000000;
+}
+.style17 {
+	font-family: Arial;
+}
+.style18 {
+	font-family: "Times New Roman";
+}
+.style14 {
+	font-size: x-large;
+	color: #0000FF;
+}
+.style9 {
+	font-size: x-large;
+	color: #008000;
+}
+.style19 {
+	font-size: large;
+}
+.style20 {
+	color: #008000;
+	font-size: large;
+}
+.style7 {
+	font-size: large;
+	color: #008000;
+}
+</style>
+<meta content="FIR Filter Design, FIR Filter Software, FIR Filter Calculator, Digital Filter, group delay, Kaiser Window, Sinc Window, Parks McClellan, free" name="keywords" />
+<meta content="This free FIR filter design software uses uses three methods to synthesize filters, Parks McClellan, rectangular window impulse, and frequency domain sampling." name="description" />
+</head>
+
+<body>
+
+<p>
+		<span class="style14">Iowa Hills Software&nbsp;&nbsp; Digital and Analog Filters&nbsp;</span><br class="style13" />
+		<span class="style13"><span class="style9">FIR Filter Design</span> </span>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="Index.html">Home</a> </p>
+<p>This FIR filter design program is free. It uses three separate methods to 
+synthesize filters, Parks McClellan, rectangular window impulse, and frequency 
+domain sampling. It will synthesize linear phase or minimum phase filters and 
+fractional group delay adjustments can also be made. It is available on the <a href="8DownloadPage.html" >Download Page</a>.</p>
+<p>The program does not synthesize Hilbert filters or 
+Differentiators. These and other types of specialized band pass filters are available from our
+		<a href="A5HilbertPhasePage.html">Hilbert Filters</a> 
+program (also free).</p>
+<p>For a custom magnitude response, the program allows the user to define a 
+filter at several points in the frequency domain in a text file. The program 
+then reads the file and calculates the corresponding FIR coefficients via the 
+Inverse Fourier Transform.</p>
+<p>This program has two test benches. The first allows you to test the filter 
+with a square wave or sine wave, but also allows you to read in a signal to be 
+filtered. The program will display both the filtered and unfiltered 
+signal in both the frequency and time domains. </p>
+<p>The program also has an audio test bench that allows you to apply the filter 
+to a wav file which allows you to hear the affects of filtering.</p>
+<p>If you are more interested in writing your own FIR program, see the
+<a href="A7ExampleCodePage.html">Example C Code Page</a> for  
+the Parks McClellan and windowed FIR filter algorithms. C code to 
+implement an FIR filter is also given there.</p>
+<p>&nbsp;</p>
+<p><span class="style20">FIR Design Methods</span><br />
+There are numerous methods available for synthesizing an FIR filter, and as we 
+said above, this program utilizes three of them.</p>
+<p><span class="style20">Parks McClellan</span><br />
+This algorithm minimizes the error in the pass and stop bands by utilizing the 
+Chebyshev approximation. It is a variation on the Remez exchange algorithm, 
+modified specifically for FIR filter design. See this&nbsp; Wikipedia
+<a href="http://en.wikipedia.org/wiki/Parks-McClellan_filter_design_algorithm">article</a>.</p>
+<p>It is considered by many to be a standard for FIR filter design, but it is 
+only included in this program for comparison purposes. In other words, it allows 
+you to compare filters from the other methods to this so called standard. You 
+will find that, in general, the simpler methods generate superior filters.</p>
+<p>&nbsp;</p>
+<p><span class="style20">Rectangular Window Impulse Response.</span><br />
+This is the canonical method for FIR design in the sense that it is both easy to 
+understand and the simplest to implement. It is first method taught in most 
+textbooks.</p>
+<p>The basic idea is to use the Inverse Fourier Transform to obtain the (time 
+domain) impulse response of an ideal frequency domain response (i.e. a 
+rectangular window), as shown here for a low pass filter. This<span class="style16">
+Brunel University
+<a href="http://dea.brunel.ac.uk/cmsp/Home_Saeed_Vaseghi/Chapter05-DigitalFilters.pdf">
+article</a></span> describes the method quite nicely for the 
+various type of filters. </p>
+<p>
+<img alt="SincDerivation.png" src="FIR%20Filters/SincDerivation.png" /></p>
+<p>This shows the result of this method for a 50 tap low pass filter with
+<span class="style17">Ω<sub>c</sub> = 0.2. In general, this method, by itself, 
+does not generate an acceptable filter. In general, a time domain window such as 
+the Kaiser must be applied to the impulse response to reduce the side lobes. This 
+secondary operation is not required of filters generated by the Parks McClellan 
+routine. </span></p>
+<p><span class="style17">This method has the distinct advantage however of utter 
+simplicity. This method, including a window, requires as little as ten lines of 
+code to implement. This is important when a filter must be generated on the fly. 
+By contrast, the Parks McClellan routine requires more than 500 lines of code.</span></p>
+<p>
+<img alt="WindowedSincResponse.png" height="254" src="FIR%20Filters/WindowedSincResponse.png" width="308" /></p>
+<p>&nbsp;</p>
+<p><span class="style20">Sampled Frequency Domain</span><br class="style19" />
+An alternative to the method just described is to sample the ideal frequency 
+domain response and then do a Discrete Inverse Fourier Transform. This approach,
+<a href="FIRFiltersByFreqSampling.html">described here</a>, 
+eliminates the need to carry out the Fourier integral, which may not be simple. 
+As an example, we show the ideal frequency response for a 7 pole Inverse 
+Chebyshev filter. The required integration to obtain this filter&#39;s impulse 
+response is nontrivial.
+</p>
+<p>When sampled however, and processed in discrete time, we can generate the FIR 
+filter shown here. Here are the <a href="FIR%20Filters/50TapInverseChebyLPF.txt">
+50 FIR Coefficients</a> for this filter.</p>
+<p>
+<img alt="FreqSamplingDerivation.png" src="FIR%20Filters/FreqSamplingDerivation.png" /></p>
+<p>In general, sampling the frequency domain allows us to generate any filter 
+response imaginable, but this does not mean that all possible filter responses 
+are desirable in a FIR format. To point, the Inv Chebyshev filter shown here is 
+a rather poor FIR filter simply because a much better filter can be achieved 
+with fewer taps if we start with a better prototype such as the rectangle. 
+Butterworth and Chebyshev filters are even worse than this example, again, 
+because of the excessive number of taps required to generate those responses.</p>
+<p>To realize this methods clear advantages, we must start by sampling a 
+suitable frequency domain model, such as the Raised Cosine shown here. f(n) = 
+0.5 + 0.5<span class="style17">·</span> cos(2<span class="style17">·</span><span class="style18">π</span><span class="style17">·n/( 
+(1-α)·N) ) </span>).</p>
+<p>
+<img alt="Raised Cosine Window.png" src="FIR%20Filters/Raised%20Cosine%20Window.png" /></p>
+<p>The advantage to using this model is that it is infinitely adjustable between 
+a rectangle and a raised cosine which allows us to control the amount of 
+distortion caused by the filter. Sharp filters, generated by rectangular 
+windows, have significant amounts of overshoot and ringing in their step 
+response, which is unacceptable in many applications. The Raised Cosine allows 
+us to adjust the amount of distortion inevitably caused by all filters to an 
+acceptable level. </p>
+<p>This shows an example of the effect of Alpha on the filter&#39;s frequency and 
+time domain responses.<img alt="RaisedCosineExample.png" height="396" src="FIR%20Filters/RaisedCosineExample.png" width="726" /></p>
+<p>&nbsp;</p>
+<p><span class="style7">Kaiser and Sinc Windows</span><br />
+This program has two time domain windows to choose from. The first is the Kaiser, which is well 
+documented, and needs no explanation here. The second is the Sinc window. 
+Strangely, it is difficult to find a discussion of this window in any textbook or on the web.</p>
+<p>Intuitively, it would seem that the sinc function ( sin(x) / x ) would be the ideal 
+window for FIR filters, and indeed, the user will find that it performs as good 
+as, or better than the Kaiser in most 
+situations. Of course, what is 
+&quot;better&quot; will depend on the design requirements. </p>
+<p>Here are two filter examples, a low pass and a band pass, designed with 
+both windows. In both cases the Kaiser and Sinc windows were adjusted so that the filters would have 
+comparable pass bands. These 
+two plots show a general truth about these windows. The Kaiser gives better 
+close in stop band rejection, and the Sinc does better further out.</p>
+<p>
+<img alt="24 Tap Sinc Kaiser Comparison" src="FIR%20Filters/24%20Tap%20LPF%20Sinc%20Kaiser%20Comparison.png" /></p>
+<p>
+<img alt="71 Tap BPF Sinc Kaiser Comparison.png" src="FIR%20Filters/71%20Tap%20BPF%20Sinc%20Kaiser%20Comparison.png" /></p>
+<p>
+&nbsp;</p>
+<p><span class="style7">Screen shot of the free FIR Filter program</span><span class="style9">.</span>&nbsp;
+<a href="8DownloadPage.html" >Available on the Download Page</a><img alt="FIR Filter Designer Screen Shot.png" src="FIR%20Filters/FIR%20Screen%20Shot.png" /><br />
+<a href="FIR%20Filters/52%20Tap%20Raised%20Cos%20LPF.txt">Example coefficients 
+(for the filter shown).</a></p>
+<p>&nbsp;</p>
+<p><span class="style7">Screen shot of the program&#39;s test bench.<br />
+</span>
+<img alt="FIR Test Bench Screen Shot.png" src="FIR%20Filters/FIR%20Test%20Bench%20Screen%20Shot.png" /></p>
+<p>This is essentially the same test bench as the IIR Filter test bench. This 
+screen shot shows how the filter affects a square wave. The program can also 
+read in a user defined signal for filtering. The Center and Span buttons are 
+sliders which allow the user to easily zoom in and move across a signal, much 
+like a digital oscilloscope. </p>
+<p>&nbsp;</p>
+<p><span class="style7">Screen shot of the Audio Test Bench</span><span class="style9">.</span><br />
+The Audio Test Bench allows you to filter a wav file, and play the results.</p>
+<p>
+<img alt="SoundForm Screen Shot.png" src="FIR%20Filters/SoundForm%20Screen%20Shot.png" /></p>
+<p>&nbsp;</p>
+<p>Copyright 2013&nbsp; Iowa Hills Software</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+
+<!-- Mirrored from cb.wunderkis.de/wk-pub/www.iowahills.com/5FIRFiltersPage.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 21 Nov 2022 16:10:11 GMT -->
+</html>

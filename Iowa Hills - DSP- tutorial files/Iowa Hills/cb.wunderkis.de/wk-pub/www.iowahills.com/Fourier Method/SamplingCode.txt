@@ -1,0 +1,324 @@
+
+/*
+ July 17, 2015
+ Iowa Hills Software LLC
+ http://www.iowahills.com
+
+ If you find a problem with this code, please leave us a note on:
+ http://www.iowahills.com/feedbackcomments.html
+
+ This code is meant to serve as an example for the code needed generate
+ FIR coefficients via the frequency sampling method. This is not stand alone
+ code. We have not supplied definitions for the global variables, but they
+ should be self explanatory. 
+
+ We show 4 pieces of code here.
+ 1. SimulateAnalogProto() will evaluate a filter polynomial, such as a Butterworth.
+    It shows how to do the frequency warping and generate a low pass, high pass,
+    band pass, and notch response from the polynomial.
+ 2. CalcWinPhase() will set the phase for a linear phase custom filter.
+    You need to define the magnitude of the response, then use this function to set the
+    phase appropriately for the type of filter. i.e. low pass, band pass, etc.
+ 3. InverseFFT() is not an FFT routine, it shows how to properly fill the input array
+    for an Inverse FFT, set the Nyquist bin, and shows where the FIR coefficients
+    will be located after the Inverse FFT has been completed.
+ 4. AdjustDelay() shows how to modify the delay of any FIR response by a fractional amount.
+
+
+ There is a significant amount of code you need to supply in order to use this code,
+ including an FFT routine and a function that defines the magnitude of your custom response.
+ This code assumes your FFT routine places DC in bin 0, Nyquist in bin N/2, and has the negative
+ frequency bins folded over around the Nyquist bin. In other words, bin 1 folds
+ over to bin N-1, etc. (Some FFT routines have DC in the center bin and fold around that.)
+
+
+ We use these 2 definitions in the code extensively.
+ #define iNUMSAMPLES 2048     Used for loop control
+ #define dNUMSAMPLES 2048.0   Used for math
+ These need to be a power of 2 and should be at least 1024
+ It does not improve this method to make them huge, but they need to be
+ big enough to satisfy your frequency resolution requirements. For example,
+ if iNUMSAMPLES = 2048, the resolution for setting the corner frequencies is Pi/1024.
+
+ The basic procedure to follow is:
+ 1. Generate iNUMSAMPLES/2 positive frequency domain samples, either from a polynomial,
+    or from your custom definition.
+ 2. Use these samples to create an input array of length iNUMSAMPLES for the Inverse FFT.
+ 3. Perform the Inverse FFT and fill an FIR Coefficients array with the desired values.
+ 4. Apply a window as needed. We suggest a Kaiser window for linear phase filters and a Half
+    cosine window for responses derived from a polynomial.
+ 5. Adjust the group delay if needed. (This isn't typically needed.)
+
+*/
+
+
+// This function evaluates an analog filter polynomial, such as a Butterworth.
+// It requires the arrays D[] and N[] be filled with the 2nd order polynomial coefficients.
+// Its evaluates the polynomial H(s) at iNUMSAMPLES/2 positive frequencies and fills the complex array HofS[].
+// Since the polynomial defines the phase, the CalcWinPhase() function is not used with this.
+void SimulateAnalogProto(void)
+{
+ int j, n, NPoints, NSections;
+ double Omega0, Q, Gain;
+ ComplexD s, s_sq, Numerator, Denominator, H;
+ NPoints = iNUMSAMPLES/2;
+ NSections = (Filt.NumPoles + 1) / 2;  // Number of 2nd order sections.
+
+ Omega0 = 1.0 / tan(Filt.OmegaC * M_PI_2);
+
+  // Calc the Gain compensation. This is 1 for most polys.
+ Gain = 1.0;
+ for(j=0; j<NSections; j++)
+  {
+   if(N0[j] != 0.0)  // N0[j] should never be 0.
+    {
+     Gain *= D0[j] / N0[j];
+    }
+  }
+
+ // Calculate the simulation frequencies. Warp the frequencies per the bilinear transform (the tangent function).
+ for(j=0; j<NPoints; j++)SimOmega[j] = Omega0 * tan(M_PI_2 * (double)j / (double)NPoints);
+ SimOmega[0] = 1.0E-12;  // To avoid a possible divide by zero.
+
+
+ switch(Filt.PassType)
+  {
+   case LPF:  // low pass
+   for(j=0; j<NPoints; j++)
+	{
+	 s = ComplexD(Filt.LossFactor, SimOmega[j]);
+	 s_sq = s * s;
+
+	 H = ComplexD(1.0,0.0);
+	 for(n=0; n<NSections; n++)
+	  {
+	   Numerator   = N2[n] * s_sq + N1[n] * s + N0[n];
+	   Denominator = D2[n] * s_sq + D1[n] * s + D0[n];
+	   H = H * Numerator / Denominator;
+	   if(AbsVal(Denominator) < 1.0E-12)Denominator = 1.0E-12;
+	  }
+	 HofS[j] = H * Gain;
+	}
+   break;
+
+   case HPF:  // high pass
+   for(j=0; j<NPoints; j++)
+	{
+	 s = ComplexD(Filt.LossFactor, SimOmega[j]);
+	 s_sq = s * s;
+
+	 H = ComplexD(1.0,0.0);
+	 for(n=0; n<NSections; n++)
+	  {
+	   Numerator   = N0[n] * s_sq + N1[n] * s + N2[n];
+	   Denominator = D0[n] * s_sq + D1[n] * s + D2[n];
+	   if(AbsVal(Denominator) < 1.0E-12)Denominator = 1.0E-12;
+	   H = H * Numerator / Denominator;
+	  }
+	 HofS[j] = H * Gain;
+	}
+   break;
+
+   case BPF:    // band pass
+   Q = 0.50 / tan(Filt.OmegaC * M_PI_2); // This is a correction factor to help correct the Q as OmegaC -> 1.0
+   Q *= Filt.OmegaC / Filt.BW;
+   for(j=0; j<NPoints; j++)
+	{
+	 s = ComplexD(Filt.LossFactor, SimOmega[j]);
+	 s_sq = s * s;
+
+	 H = ComplexD(1.0,0.0);
+	 for(n=0; n<NSections; n++)
+	  {
+
+	   Numerator = s_sq*s_sq * N2[n] * Q*Q + s*s_sq * N1[n] * Q;
+	   Numerator += (2.0 * N2[n]* Q*Q + N0[n]) * s_sq;
+	   Numerator += s * N1[n] * Q + N2[n] * Q*Q;
+
+	   Denominator = s_sq*s_sq * D2[n] * Q*Q + s*s_sq * D1[n] * Q;
+	   Denominator += (2.0 * D2[n] * Q*Q + D0[n]) * s_sq;
+	   Denominator += s * D1[n] * Q + D2[n] * Q*Q;
+	   if(AbsVal(Denominator) < 1.0E-12)Denominator = 1.0E-12;
+
+	   H = H * Numerator / Denominator;
+	  }
+	 HofS[j] = H * Gain;
+	}
+   break;
+
+   case NOTCH:
+   Q = 1.0;
+   if(Filt.OmegaC > 0.5)Q = 1.0 / tan(Filt.OmegaC * M_PI_2);
+   Q *= Filt.OmegaC / Filt.BW;
+   for(j=0; j<NPoints; j++)
+	{
+	 s = ComplexD(Filt.LossFactor, SimOmega[j]);
+	 s_sq = s * s;
+
+	 H = ComplexD(1.0,0.0);
+	 for(n=0; n<NSections; n++)
+	  {
+	   Numerator = Q*Q * N0[n] * s_sq*s_sq + s*s_sq * N1[n] * Q;
+	   Numerator += (N2[n] + 2.0 * Q*Q * N0[n]) * s_sq;
+	   Numerator += s * N1[n] * Q + Q*Q * N0[n];
+
+	   Denominator = Q*Q * D0[n] * s_sq*s_sq + s*s_sq * D1[n] * Q;
+	   Denominator += (D2[n] + 2.0 * Q*Q * D0[n]) * s_sq;
+	   Denominator += s * D1[n] * Q + Q*Q * D0[n];
+	   if(AbsVal(Denominator) < 1.0E-12)Denominator = 1.0E-12;
+
+	   H = H * Numerator / Denominator;
+	  }
+	 HofS[j] = H * Gain;
+	}
+   break;
+  }
+}
+
+//---------------------------------------------------------------------------
+
+
+
+// This function is only used for custom FIR filter responses.
+// It is not used when HofS is defined by a polynomial.
+// This function requires an array WinMag[] be filled with iNUMSAMPLES/2 equally spaced
+// samples (not warped) from your desired positive frequency domain. It sets the phase
+// appropriate for the number of taps (even or odd) and the type of filter (low pass, band pass, etc)
+// and fills the complex array HofS[].
+
+// OmegaC is the 3 dB corner freq for low and high pass filters.
+// It is the center frequncy for band pass and notch filters.
+// BW is the 3 dB bandwidth of band pass and notch filters.
+// 0 < OmegaC < 1  and 0 < BW < 1
+
+void CalcWinPhase(void)
+{
+ double RadPerSample, Arg, LeftTap, RightTap, CenterTap;;
+ int j, CenterJ;
+
+ // Set the Radians per sample.
+ RadPerSample = -M_PI * (dNUMSAMPLES - 1.0)/dNUMSAMPLES;    // Even tap count.
+ if(Filt.NumTaps % 2 == 1)RadPerSample = -M_PI;             // Odd tap count.
+
+ switch(Filt.PassType)
+  {
+   case LPF:
+   case BPF:
+	for(j=0; j<iNUMSAMPLES/2; j++)
+	 {
+	  Arg = RadPerSample * (double)j;
+	  HofS[j] = WinMag[j] * ComplexD( cos(Arg), sin(Arg) );
+	 }
+	break;
+
+   case HPF:
+	for(j=iNUMSAMPLES/2; j>=0; j--)
+	 {
+	  Arg = RadPerSample * (double)(j-iNUMSAMPLES/2);
+	  HofS[j] = WinMag[j] * ComplexD( cos(Arg), sin(Arg) );
+	 }
+	break;
+
+   case NOTCH:
+   RightTap = ( Filt.OmegaC + Filt.BW/2.0 ) * dNUMSAMPLES / 2.0;
+   LeftTap =  ( Filt.OmegaC - Filt.BW/2.0 ) * dNUMSAMPLES / 2.0;
+   CenterTap = (RightTap - LeftTap)/2.0 + LeftTap;
+   CenterJ = NearestInt(CenterTap); // NearestInt() rounds the float val to the nearest int val.
+
+	for(j=0; j<=CenterJ; j++)
+	 {
+	  Arg = RadPerSample * (double)j;
+	  HofS[j] = WinMag[j] * ComplexD( cos(Arg), sin(Arg) );
+	 }
+	for(j=iNUMSAMPLES/2; j>=CenterJ; j--)
+	 {
+	  Arg = RadPerSample * (double)(j-iNUMSAMPLES/2);
+	  HofS[j] = WinMag[j] * ComplexD( cos(Arg), sin(Arg) );
+	 }
+   break;
+  }
+
+
+}
+//---------------------------------------------------------------------------
+
+
+// This function does this:
+// 1. Fills a complex array to be used in an Inverse FFT from the HofS array filled above.
+// 2. Sets the Nyquist bin appropriately, depending on the type of filter to be generated.
+// 3. Calls an Inverse FFT routine (not provided here).
+// 4. Gets the FIR coefficients from the output of the FFT.
+
+// This assumes HofS[] contains iNUMSAMPLES/2 positive complex frequency samples.
+
+void InverseFFT(void)
+{
+ int t, f, StartT; // f and t are freq and time indexes.
+
+ // Fill the FFT's input array with the positive freq samples.
+ // Then fill the negative frequency bins with conjugate values.
+ for(f=0; f<iNUMSAMPLES/2; f++)FFTInput[f] = HofS[f];
+ for(f=1; f<iNUMSAMPLES/2; f++)FFTInput[iNUMSAMPLES-f] = conj(HofS[f]);
+
+ // Set the Nyquist bin appropriately for the filter type.
+ if(Filt.PassType == LPF || Filt.PassType == BPF)FFTInput[iNUMSAMPLES/2] = ComplexD(0.0, 0.0);
+ else                                            FFTInput[iNUMSAMPLES/2] = ComplexD(1.0, 0.0);
+
+ FFT(FFTInput,iNUMSAMPLES, INVERSE);
+
+ if(Filt.LinearPhase) // This is true unless the we are using an analog prototype.
+  {
+   StartT = iNUMSAMPLES/2 - Filt.NumTaps/2;  // integer math
+  }
+ else // For analog prototypes such as the Butterworth
+  {
+   StartT = 0;
+  }
+
+ // Get the FIR coefficients. Our Inverse FFT requires scaling by dNUMSAMPLES.
+ // Use the real part. The imag part is zero if the neg freqs were set properly with conjugate values.
+ for(t=0; t<Filt.NumTaps; t++)FirCoeff[t] = FFTInput[t+StartT].real() / dNUMSAMPLES;
+
+}
+
+//-----------------------------------------------------------------------------
+
+// This function is used to adjust the delay of an FIR by a fractional amount.
+// Use this function after you applied a window to your coefficients.
+// The Delay value is in terms of a fraction of a sample (not in terms of sampling freq).
+// Delay may be pos or neg. Typically a filter's delay can be adjusted by +/- NumTaps / 20
+// without affecting its performance significantly.
+void AdjustDelay(void)
+{
+ int j, FFTSize;
+ double dFFTSize;
+ ComplexD s, *FFTInput;
+ FFTSize = RequiredFFTSize(Filt.NumTaps);  // returns a power of 2 value >= NumTaps
+ dFFTSize = FFTSize;                       // A double var used in calculations.
+
+ FFTInput  = new(std::nothrow) ComplexD[FFTSize];
+ if(FFTOutput == NULL)
+  {
+   ShowMessage("Unable to Allocate memory in TopForm::AdjustDelay");
+   return;
+  }
+ for(j=0; j<FFTSize; j++)FFTInput[j] = ComplexD(0.0, 0.0);
+ for(j=0; j<Filt.NumTaps; j++)FFTInput[j] = ComplexD(FirCoeff[j], 0.0);
+
+ FFT(FFTInput, FFTSize, FORWARD);
+ for(j=0; j<=FFTSize/2; j++)
+  {
+   s = ComplexD(0.0, (double)j / dFFTSize * M_2PI);
+   FFTInput[j] *= exp(-Filt.Delay * s);
+  }
+ for(j=1; j<FFTSize/2; j++)FFTInput[FFTSize-j] = conj(FFTInput[j]);
+
+ FFT(FFTInput, FFTSize, INVERSE);
+ for(j=0; j<Filt.NumTaps; j++)
+  {
+   FirCoeff[j] = FFTInput[j].real();
+  }
+
+ delete[] FFTInput;
+}
+//-----------------------------------------------------------------------------
